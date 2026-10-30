@@ -120,5 +120,9 @@
  "Click a theme to pick it for building.": "Cliquez sur un thème pour le choisir.",
  "Gallery columns": "Colonnes de la galerie",
  "Gallery thumbnail size (px)": "Taille des vignettes (px)",
- "Load gallery previews automatically": "Charger les aperçus automatiquement"
+ "Load gallery previews automatically": "Charger les aperçus automatiquement",
+ "Random": "Au hasard",
+ "Sort": "Trier",
+ "My notes": "Mes notes",
+ "Save note": "Enregistrer la note"
 }

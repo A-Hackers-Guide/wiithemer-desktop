@@ -19,6 +19,8 @@ env:
     --add-data app/tools:tools
     --add-data app/spins:spins
     --add-data app/lang:lang
+    --hidden-import PIL._tkinter_finder
+    --hidden-import PIL.ImageTk
     app/wiithemer_desktop.py
 
 jobs:

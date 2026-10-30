@@ -116,5 +116,9 @@
  "Click a theme to pick it for building.": "Klicke auf ein Theme, um es auszuwählen.",
  "Gallery columns": "Galerie-Spalten",
  "Gallery thumbnail size (px)": "Vorschaubildgröße (px)",
- "Load gallery previews automatically": "Vorschauen automatisch laden"
+ "Load gallery previews automatically": "Vorschauen automatisch laden",
+ "Random": "Zufall",
+ "Sort": "Sortieren",
+ "My notes": "Meine Notizen",
+ "Save note": "Notiz speichern"
 }

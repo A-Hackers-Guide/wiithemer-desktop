@@ -211,6 +211,8 @@ The app makes a `.csm` file. To install it you need a **softmodded Wii** (with t
 |---|---|
 | **Search box** | Filters the theme list as you type. |
 | **Favorites only** | Shows only the themes you've starred. |
+| **Random** | Selects a random theme from the current list. |
+| **Sort** | A to Z, Z to A, Favorites first, Recently built, Most built, or By source. |
 | **Theme list** | Every theme that isn't hidden. **★** marks favorites. The **Source** column says where it comes from: `catalog` (built in), `local` (a file on your computer) or `url` (a link). **Ctrl-click / Cmd-click / Shift-click** selects several themes; **Build theme** then builds all of them. |
 | **★ button** | Stars or unstars the selected themes. |
 | **Double-click / Enter** | Builds the selected theme(s) right away. |
@@ -218,6 +220,7 @@ The app makes a `.csm` file. To install it you need a **softmodded Wii** (with t
 | **Open .mym…** | Adds a `.mym` file from your computer to the list. You can also pick a preview image (PNG/JPG/GIF/AVIF/WebP), or skip it. |
 | **Add URL…** | Adds a theme by direct link to a `.mym` file, plus an optional preview image link. The file downloads when you build. |
 | **Wii profile** | Saves and loads named setups (version, region, spin, spin-first, output folder, own System Menu file), for example "Living room Wii 4.3U" and "Kids' Wii 4.2E". Pick one from the list to load it, use **Save as…** to save the current options, and **Delete** to remove the selected one. |
+| **My notes** | Your own notes for the selected theme ("installed on the kids' Wii", "use fastspin"…). Saved when you click away or press **Save note**. The search box searches notes too. |
 | **Preview** | Shows the theme's preview image. Built-in previews come from the original WiiThemer repository and are saved for later. |
 | **System Menu version** | `4.3`, `4.2`, `4.1` or `4.0`. |
 | **Region** | `U`, `E`, `J` or `K`. |
@@ -399,6 +402,8 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `custom_themes` | `[]` | Themes you added: `{"name", "file", "preview", "source": "local" \| "url"}`. |
 | `hidden_themes` | `[]` | Names of themes hidden from the Build list. |
 | `favorites` | `[]` | Names of starred themes. |
+| `sort` | `"name"` | Theme list order: `name`, `name_desc`, `favorites`, `recent`, `most_built` or `source`. |
+| `notes` | `{}` | Your notes for each theme: `{"Theme name": "text"}`. |
 
 #### `general`
 
@@ -738,7 +743,7 @@ python app/wiithemer_desktop.py --selftest
 Package it yourself with PyInstaller (the same arguments CI uses):
 
 ```bash
-pyinstaller --noconfirm --clean --windowed --name WiiThemerDesktop --icon packaging/icon.png --add-data app/catalog.json:. --add-data app/tools:tools --add-data app/spins:spins --add-data app/lang:lang app/wiithemer_desktop.py
+pyinstaller --noconfirm --clean --windowed --name WiiThemerDesktop --icon packaging/icon.png --add-data app/catalog.json:. --add-data app/tools:tools --add-data app/spins:spins --add-data app/lang:lang --hidden-import PIL._tkinter_finder --hidden-import PIL.ImageTk app/wiithemer_desktop.py
 ```
 
 - Windows: add `--onefile` to get one `.exe` in `dist/`.
@@ -875,6 +880,12 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ---
 
 ## Changelog
+
+### v1.8.0
+- **Sorting**: A to Z, Z to A, favorites first, recently built, most built, or by source.
+- **My notes**: write a note for any theme. Notes are saved automatically and the search box searches them too.
+- A **Random** button picks a theme for you.
+- Fix: **theme previews now show in the Linux AppImage** (PyInstaller was missing Pillow's Tk bridge). This affected Linux builds since v1.0.
 
 ### v1.7.0
 - A **Gallery tab**: a thumbnail grid of every theme. Click one to pick it. Previews load one at a time and only when you ask, unless you turn on auto-loading.

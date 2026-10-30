@@ -9,6 +9,7 @@ itself, the catalog, the tools, and the look of the app.
 """
 
 import copy
+import random
 import hashlib
 import io
 import json
@@ -27,7 +28,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.7.0"
+APP_VERSION = "1.8.0"
 MOD = "Command" if sys.platform == "darwin" else "Control"
 MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
@@ -209,6 +210,8 @@ DEFAULT_SETTINGS = {
         "custom_themes": [],
         "hidden_themes": [],
         "favorites": [],
+        "sort": "name",
+        "notes": {},
     },
     "general": {
         "check_for_updates": True,
@@ -697,8 +700,19 @@ class App(tk.Tk):
         self.search_entry = ttk.Entry(left, textvariable=self.search)
         self.search_entry.pack(fill="x", pady=4)
         self.fav_only = tk.BooleanVar(value=False)
-        ttk.Checkbutton(left, text="Favorites only", variable=self.fav_only,
-                        command=self.refresh_theme_list).pack(anchor="w")
+        filt = ttk.Frame(left)
+        filt.pack(fill="x")
+        ttk.Checkbutton(filt, text="Favorites only", variable=self.fav_only,
+                        command=self.refresh_theme_list).pack(side="left")
+        ttk.Button(filt, text="Random", command=self.random_theme).pack(side="right")
+        sortrow = ttk.Frame(left)
+        sortrow.pack(fill="x", pady=(4, 0))
+        ttk.Label(sortrow, text="Sort").pack(side="left")
+        self.v_sort = tk.StringVar(value=self.SORTS.get(self.settings["catalog"]["sort"], "A to Z"))
+        sort_box = ttk.Combobox(sortrow, textvariable=self.v_sort, state="readonly", width=18,
+                                values=list(self.SORTS.values()))
+        sort_box.pack(side="left", padx=6)
+        sort_box.bind("<<ComboboxSelected>>", lambda e: self.change_sort())
         self.theme_tree = ttk.Treeview(left, columns=("fav", "src"), show="tree headings",
                                        height=18, selectmode="extended")
         self.theme_tree.heading("#0", text="Name")
@@ -731,6 +745,13 @@ class App(tk.Tk):
         self.theme_title.pack(anchor="w")
         self.preview = ttk.Label(right)
         self.preview.pack(anchor="w", pady=8)
+        noterow = ttk.Frame(right)
+        noterow.pack(anchor="w", fill="x")
+        ttk.Label(noterow, text="My notes").pack(side="left")
+        ttk.Button(noterow, text="Save note", command=self.save_note).pack(side="left", padx=6)
+        self.note_box = tk.Text(right, height=3, width=60, wrap="word", **self.text_opts)
+        self.note_box.pack(anchor="w", pady=(2, 8))
+        self.note_box.bind("<FocusOut>", lambda e: self.save_note())
 
         opts = ttk.Frame(right)
         opts.pack(anchor="w", fill="x")
@@ -1073,8 +1094,8 @@ class App(tk.Tk):
             img.thumbnail((size, size))
             self.gallery_imgs[name] = ImageTk.PhotoImage(img)
             pic.configure(image=self.gallery_imgs[name], text="")
-        except Exception:
-            pass
+        except Exception as e:
+            self.log(f"Cannot show preview for {name}: {e}")
 
     def gallery_pick(self, name):
         self.search.set("")
@@ -1096,14 +1117,65 @@ class App(tk.Tk):
         q = self.search.get().lower()
         hidden = set(self.settings["catalog"]["hidden_themes"])
         favs = set(self.settings["catalog"]["favorites"])
+        notes = self.settings["catalog"]["notes"]
         self.theme_tree.delete(*self.theme_tree.get_children())
-        for t in self.all_themes():
-            if t["name"] in hidden or (q and q not in t["name"].lower()):
+        for t in self.sorted_themes(self.all_themes()):
+            text = (t["name"] + " " + notes.get(t["name"], "")).lower()
+            if t["name"] in hidden or (q and q not in text):
                 continue
             if self.fav_only.get() and t["name"] not in favs:
                 continue
             self.theme_tree.insert("", "end", iid=t["name"], text=t["name"],
                                    values=("★" if t["name"] in favs else "", t["source"]))
+
+    SORTS = {"name": "A to Z", "name_desc": "Z to A", "favorites": "Favorites first",
+             "recent": "Recently built", "most_built": "Most built", "source": "By source"}
+
+    def sorted_themes(self, themes):
+        mode = self.settings["catalog"].get("sort", "name")
+        favs = set(self.settings["catalog"]["favorites"])
+        hist = self.settings["general"]["history"]
+        last = {h["theme"]: i for i, h in enumerate(hist)}
+        count = {}
+        for h in hist:
+            count[h["theme"]] = count.get(h["theme"], 0) + 1
+        by_name = lambda t: t["name"].lower()
+        keys = {
+            "name": by_name,
+            "name_desc": by_name,
+            "favorites": lambda t: (t["name"] not in favs, by_name(t)),
+            "recent": lambda t: (-last.get(t["name"], -1), by_name(t)),
+            "most_built": lambda t: (-count.get(t["name"], 0), by_name(t)),
+            "source": lambda t: (t["source"], by_name(t)),
+        }
+        return sorted(themes, key=keys.get(mode, by_name), reverse=(mode == "name_desc"))
+
+    def change_sort(self):
+        choice = self.v_sort.get()
+        labels = {label: key for key, label in self.SORTS.items()}
+        self.settings["catalog"]["sort"] = choice if choice in self.SORTS else labels.get(choice, "name")
+        self.persist()
+        self.refresh_theme_list()
+
+    def random_theme(self):
+        names = self.theme_tree.get_children()
+        if names:
+            pick = random.choice(names)
+            self.theme_tree.selection_set(pick)
+            self.theme_tree.see(pick)
+            self.log(f"Random pick: {pick}")
+
+    def save_note(self):
+        name = getattr(self, "note_theme", None)
+        if not name:
+            return
+        text = self.note_box.get("1.0", "end-1c").strip()
+        notes = self.settings["catalog"]["notes"]
+        if text:
+            notes[name] = text
+        else:
+            notes.pop(name, None)
+        self.persist()
 
     def toggle_favorite(self):
         favs = self.settings["catalog"]["favorites"]
@@ -1130,6 +1202,10 @@ class App(tk.Tk):
         t = self.selected_theme()
         if not t:
             return
+        self.save_note()  # keep the note typed for the previous theme
+        self.note_theme = t["name"]
+        self.note_box.delete("1.0", "end")
+        self.note_box.insert("1.0", self.settings["catalog"]["notes"].get(t["name"], ""))
         self.theme_title.configure(text=t["name"])
         self.preview.configure(image="", text="")
         if t.get("regions") and len(t["regions"]) < 4:
@@ -1693,6 +1769,21 @@ def selftest():
         assert first in app.gallery_imgs
     app.gallery_pick(first)
     assert app.theme_tree.selection() == (first,)
+    app.on_theme_select()
+    app.note_box.insert("1.0", "zzuniquenote")
+    app.save_note()
+    app.search.set("zzuniquenote")
+    assert app.theme_tree.get_children() == (first,)
+    app.search.set("")
+    for mode in app.SORTS:
+        app.v_sort.set(mode)
+        app.change_sort()
+    app.v_sort.set("name_desc")
+    app.change_sort()
+    names = list(app.theme_tree.get_children())
+    assert names == sorted(names, key=str.lower, reverse=True)
+    app.random_theme()
+    assert len(app.theme_tree.selection()) == 1
     for lang in available_languages():
         app.settings["appearance"]["language"] = lang
         app.rebuild()
