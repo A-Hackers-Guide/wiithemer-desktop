@@ -1,0 +1,804 @@
+[
+ {
+  "name": "Animal Crossing",
+  "file": "animal_crossing.mym",
+  "preview": "animalcrossing.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Bakugan",
+  "file": "Bakugan.mym",
+  "preview": "bakugan.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Batman v1",
+  "file": "batman_v1.mym",
+  "preview": "batmanv1.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Batman v2",
+  "file": "batman_v2.mym",
+  "preview": "batmanv2.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Black Mage",
+  "file": "black_mage.mym",
+  "preview": "blackmage.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Black Pirate",
+  "file": "black_pirate.mym",
+  "preview": "blackpirate.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Bleach",
+  "file": "bleach.mym",
+  "preview": "bleach.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Bowser",
+  "file": "bowser.mym",
+  "preview": "bowser.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Broly",
+  "file": "broly.mym",
+  "preview": "broly.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Car",
+  "file": "car.mym",
+  "preview": "car.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Cars",
+  "file": "cars.mym",
+  "preview": "cars.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Code Geass",
+  "file": "code_geass.mym",
+  "preview": "codegeass.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Constantine",
+  "file": "constantine.mym",
+  "preview": "constantine.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dark Wii Original",
+  "file": "dark_wii_original.mym",
+  "preview": "darkwiioriginal.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dark Wii Blue",
+  "file": "dark_wii_blue{r}.mym",
+  "preview": "darkwiiblue.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dark Wii Green",
+  "file": "dark_wii_green{r}.mym",
+  "preview": "darkwiigreen.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dark Wii Orange",
+  "file": "dark_wii_orange{r}.mym",
+  "preview": "darkwiiorange.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dark Wii Pink",
+  "file": "dark_wii_pink{r}.mym",
+  "preview": "darkwiipink.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dark Wii Purple",
+  "file": "dark_wii_purple{r}.mym",
+  "preview": "darkwiipurple.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dark Wii Red",
+  "file": "dark_wii_red{r}.mym",
+  "preview": "darkwiired.avif",
+  "regions": [
+   "U",
+   "E",
+   "J"
+  ]
+ },
+ {
+  "name": "Dark Wii White",
+  "file": "dark_wii_white{r}.mym",
+  "preview": "darkwiiwhite.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dark Wii Yellow",
+  "file": "dark_wii_yellow{r}.mym",
+  "preview": "darkwiiyellow.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Deth Klok",
+  "file": "deth_klok.mym",
+  "preview": "dethklok.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Discord",
+  "file": "Discord.mym",
+  "preview": "discord.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dragon Ball Z v1",
+  "file": "dragon_ball_z_v1.mym",
+  "preview": "dragonballzv1.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dragon Ball Z v2",
+  "file": "dragon_ball_z_v2.mym",
+  "preview": "dragonballzv2.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Dr Who",
+  "file": "dr_who.mym",
+  "preview": "drwho.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Earth Bound",
+  "file": "earth_bound.mym",
+  "preview": "earthbound.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Evil Dead",
+  "file": "evil_dead.mym",
+  "preview": "evildead.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Excite Bots",
+  "file": "excite_bots.mym",
+  "preview": "excitebots.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Eyes",
+  "file": "eyes.mym",
+  "preview": "eyes.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Family Guy",
+  "file": "family_guy.mym",
+  "preview": "familyguy.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Fantasy",
+  "file": "fantasy.mym",
+  "preview": "Fantasy.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Fight Club",
+  "file": "fight_club.mym",
+  "preview": "FightClub.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Final Fantasy 7",
+  "file": "final_fantasy_7.mym",
+  "preview": "FinalFantasy7.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Futurama",
+  "file": "Futurama.mym",
+  "preview": "futurama.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Gaara",
+  "file": "gaara.mym",
+  "preview": "gaara.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Ghost Busters",
+  "file": "ghost_busters.mym",
+  "preview": "ghostbusters.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Golden Sun",
+  "file": "golden_sun.mym",
+  "preview": "GoldenSun.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Hand Drawn",
+  "file": "hand_drawn.mym",
+  "preview": "HandDrawn.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Hello Kitty",
+  "file": "hello_kitty.mym",
+  "preview": "HelloKitty.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Heros",
+  "file": "heros.mym",
+  "preview": "heros.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Jurassic Park 3",
+  "file": "jurassic_park_3.mym",
+  "preview": "jurassicpark3.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Kingdom Hearts",
+  "file": "kingdom_hearts.mym",
+  "preview": "kingdomhearts.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Leopard OS",
+  "file": "leopard_os.mym",
+  "preview": "leopardos.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Lime Wii",
+  "file": "lime_wii.mym",
+  "preview": "limewii.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Luigi",
+  "file": "luigi.mym",
+  "preview": "luigi.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Mad World",
+  "file": "mad_world.mym",
+  "preview": "madworld.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Majoras Mask",
+  "file": "majoras_mask.mym",
+  "preview": "majorasmask.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Mario",
+  "file": "mario.mym",
+  "preview": "mario.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Mario Kart",
+  "file": "Mario_Kart.mym",
+  "preview": "mariokart.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Matrix",
+  "file": "matrix.mym",
+  "preview": "matrix.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Matrix Reloaded",
+  "file": "matrix_reloaded.mym",
+  "preview": "matrixreloaded.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Metroid",
+  "file": "metroid.mym",
+  "preview": "metroid.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Mortal Kombat",
+  "file": "mortal_kombat.mym",
+  "preview": "mortalkombat.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Muse",
+  "file": "muse.mym",
+  "preview": "muse.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Nightmare B4 Xmas",
+  "file": "nightmare_b4_xmas.mym",
+  "preview": "nightmareb4xmas.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Old School Nintendo",
+  "file": "old_school_nintendo.mym",
+  "preview": "oldschoolnintendo.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Psychedelic",
+  "file": "psychedelic.mym",
+  "preview": "Psychedelic.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Ratchet and Clank",
+  "file": "ratchet_and_clank.mym",
+  "preview": "ratchetandclank.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Rockband 2",
+  "file": "rockband_2.mym",
+  "preview": "rockband2.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Shadow The Hedgehog",
+  "file": "shadow_the_hedgehog.mym",
+  "preview": "shadowthehedgehog.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Spiderman",
+  "file": "spiderman.mym",
+  "preview": "spiderman.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Super Hero Squad",
+  "file": "super_hero_squad.mym",
+  "preview": "superherosquad.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Super Sonic",
+  "file": "super_sonic.mym",
+  "preview": "supersonic.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "The Simpsons",
+  "file": "the_simpsons.mym",
+  "preview": "thesimpsons.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Thunder Cats",
+  "file": "thunder_cats.mym",
+  "preview": "thundercats.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "TMNT",
+  "file": "tmnt.mym",
+  "preview": "tmnt.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Tomb Raider",
+  "file": "tomb_raider.mym",
+  "preview": "tombraider.avif ",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "True Blood",
+  "file": "true_blood.mym",
+  "preview": "trueblood.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Win XP OS",
+  "file": "win_xp_os.mym",
+  "preview": "winxpos.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Wolverine",
+  "file": "wolverine.mym",
+  "preview": "wolverine.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ },
+ {
+  "name": "Zelda",
+  "file": "zelda.mym",
+  "preview": "zelda.avif",
+  "regions": [
+   "U",
+   "E",
+   "J",
+   "K"
+  ]
+ }
+]

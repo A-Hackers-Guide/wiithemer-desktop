@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=WiiThemer Desktop
+Comment=Build custom Wii System Menu themes
+Exec=WiiThemerDesktop
+Icon=wiithemer-desktop
+Categories=Utility;
+Terminal=false

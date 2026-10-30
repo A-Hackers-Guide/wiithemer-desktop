@@ -1,0 +1,93 @@
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYI_ARGS: >-
+    --noconfirm --clean --windowed --name WiiThemerDesktop
+    --icon packaging/icon.png
+    --add-data app/catalog.json:.
+    --add-data app/tools:tools
+    --add-data app/spins:spins
+    app/wiithemer_desktop.py
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults: { run: { shell: bash } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: python app/wiithemer_desktop.py --selftest
+      - run: pyinstaller --onefile $PYI_ARGS
+      - run: mv dist/WiiThemerDesktop.exe WiiThemerDesktop-Windows.exe
+      - uses: actions/upload-artifact@v4
+        with: { name: windows, path: WiiThemerDesktop-Windows.exe }
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: python app/wiithemer_desktop.py --selftest
+      - run: pyinstaller --osx-bundle-identifier io.github.wiithemerdesktop $PYI_ARGS
+      - name: Package .app (zip and dmg)
+        run: |
+          ditto -c -k --keepParent dist/WiiThemerDesktop.app WiiThemerDesktop-macOS.app.zip
+          hdiutil create -volname "WiiThemer Desktop" -srcfolder dist/WiiThemerDesktop.app -ov -format UDZO WiiThemerDesktop-macOS.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            WiiThemerDesktop-macOS.app.zip
+            WiiThemerDesktop-macOS.dmg
+
+  linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: sudo apt-get update && sudo apt-get install -y xvfb
+      - run: pip install -r requirements.txt
+      - run: xvfb-run -a python app/wiithemer_desktop.py --selftest
+      - run: pyinstaller $PYI_ARGS
+      - name: Build AppImage
+        env: { APPIMAGE_EXTRACT_AND_RUN: "1", ARCH: x86_64 }
+        run: |
+          mkdir -p AppDir/usr/bin
+          cp -r dist/WiiThemerDesktop/* AppDir/usr/bin/
+          cp packaging/wiithemer-desktop.desktop AppDir/
+          cp packaging/icon.png AppDir/wiithemer-desktop.png
+          printf '#!/bin/sh\nHERE="$(dirname "$(readlink -f "$0")")"\nexec "$HERE/usr/bin/WiiThemerDesktop" "$@"\n' > AppDir/AppRun
+          chmod +x AppDir/AppRun
+          curl -fsSL -o appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool
+          ./appimagetool AppDir WiiThemerDesktop-Linux-x86_64.AppImage
+          xvfb-run -a ./WiiThemerDesktop-Linux-x86_64.AppImage --selftest
+      - uses: actions/upload-artifact@v4
+        with: { name: linux, path: WiiThemerDesktop-Linux-x86_64.AppImage }
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, macos, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: out, merge-multiple: true }
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
+          generate_release_notes: true

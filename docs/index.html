@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WiiThemer Desktop</title>
+<link rel="icon" href="icon.png">
+<style>
+:root{--bg:#1e1f26;--fg:#e8e8ee;--muted:#a3a6b4;--card:#2a2c36;--accent:#34b6e8;--accent-fg:#0b1016}
+:root[data-theme="light"]{--bg:#f4f6fa;--fg:#14161c;--muted:#5a5f6e;--card:#fff;--accent:#0a84c6;--accent-fg:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px}
+header{display:flex;gap:16px;align-items:center;flex-wrap:wrap}header img{width:64px;height:64px}
+h1{margin:0}p.lead{color:var(--muted);margin:4px 0 0}
+.dl{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}
+.dl a{background:var(--accent);color:var(--accent-fg);padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:600}
+.controls{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+input,select,button{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--muted);background:var(--card);color:var(--fg)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.card{background:var(--card);border-radius:12px;overflow:hidden}.card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#0003}
+.card div{padding:8px 12px;font-weight:600}.card small{display:block;color:var(--muted);font-weight:400}
+footer{color:var(--muted);margin-top:40px;font-size:14px}a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <img src="icon.png" alt="">
+  <div><h1>WiiThemer Desktop</h1>
+  <p class="lead">Build custom Wii System Menu themes on Windows, macOS and Linux, with every setting yours to change.</p></div>
+</header>
+<div class="dl">
+  <a href="https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-Windows.exe">Windows (.exe)</a>
+  <a href="https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-macOS.dmg">macOS (.app in .dmg)</a>
+  <a href="https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-macOS.app.zip">macOS (.app zip)</a>
+  <a href="https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-Linux-x86_64.AppImage">Linux (.AppImage)</a>
+</div>
+<h2>How it works</h2>
+<p>Same steps as wiithemer.org: pick a theme, pick your System Menu version (4.0 to 4.3), pick your region (U, E, J, K), pick a channel spin, then build. The app makes a <code>.csm</code> file you install with a theme installer on a softmodded Wii. Always keep a NAND backup and Priiloader.</p>
+<p>What you can change: theme source (catalog, a local .mym, or any URL), the theme catalog itself, the spin mod, the output file name, the exact themewii build commands, extra System Menu versions, the tools and Wine command, plus colors, fonts and layout. There's also a built-in .mym editor and a raw JSON editor for every setting.</p>
+<h2>Theme gallery</h2>
+<div class="controls">
+  <input id="q" placeholder="Search themes" aria-label="Search themes">
+  <button id="mode">Toggle light/dark</button>
+</div>
+<div class="grid" id="grid"></div>
+<footer>
+  A GPL-2.0 port of <a href="https://github.com/scooby7402976/wiithemer">WiiThemer</a> by scooby7402976.
+  Themes and previews are loaded from the original project and belong to their creators.
+  Not affiliated with Nintendo. <a href="https://github.com/A-Hackers-Guide/wiithemer-desktop">Source</a>
+</footer>
+</main>
+<script>
+const BASE = "https://raw.githubusercontent.com/scooby7402976/wiithemer/1.0/previewpics/";
+let themes = [];
+const grid = document.getElementById("grid"), q = document.getElementById("q");
+function render() {
+  const s = q.value.toLowerCase();
+  grid.innerHTML = "";
+  for (const t of themes.filter(t => t.name.toLowerCase().includes(s))) {
+    const c = document.createElement("div"); c.className = "card";
+    const img = document.createElement("img"); img.loading = "lazy"; img.alt = t.name + " preview"; img.src = BASE + t.preview;
+    const d = document.createElement("div"); d.textContent = t.name;
+    const r = document.createElement("small"); r.textContent = "Regions: " + t.regions.join(", ");
+    d.append(r); c.append(img, d); grid.append(c);
+  }
+}
+fetch("catalog.json").then(r => r.json()).then(j => { themes = j; render(); });
+q.addEventListener("input", render);
+try { const m = localStorage.getItem("mode"); if (m) document.documentElement.dataset.theme = m; } catch (e) {}
+document.getElementById("mode").onclick = () => {
+  const el = document.documentElement, m = el.dataset.theme === "light" ? "dark" : "light";
+  el.dataset.theme = m; try { localStorage.setItem("mode", m); } catch (e) {}
+};
+</script>
+</body>
+</html>
