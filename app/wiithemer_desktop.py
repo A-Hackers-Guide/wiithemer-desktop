@@ -28,7 +28,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "2.1.0"
+APP_VERSION = "2.2.0"
 MOD = "Command" if sys.platform == "darwin" else "Control"
 MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
@@ -539,7 +539,16 @@ class App(tk.Tk):
         st.map("Treeview", background=[("selected", a["select_bg"])],
                foreground=[("selected", a["accent_fg"])])
         st.configure("TEntry", fieldbackground=a["field_bg"], foreground=a["fg"])
-        st.configure("TCombobox", fieldbackground=a["field_bg"], foreground=a["fg"])
+        st.configure("TCombobox", fieldbackground=a["field_bg"], foreground=a["fg"],
+                     background=a["field_bg"], arrowcolor=a["fg"])
+        # Read-only comboboxes otherwise fall back to the theme's light grey with unreadable text.
+        st.map("TCombobox", fieldbackground=[("readonly", a["field_bg"])],
+               foreground=[("readonly", a["fg"])], selectbackground=[("readonly", a["field_bg"])],
+               selectforeground=[("readonly", a["fg"])])
+        self.option_add("*TCombobox*Listbox.background", a["field_bg"])
+        self.option_add("*TCombobox*Listbox.foreground", a["fg"])
+        self.option_add("*TCombobox*Listbox.selectBackground", a["select_bg"])
+        self.option_add("*TCombobox*Listbox.selectForeground", a["accent_fg"])
         st.configure("Header.TLabel", font=(a["font_family"], int(a["font_size"]) + 6, "bold"),
                      foreground=a["accent"])
         self.text_opts = dict(bg=a["field_bg"], fg=a["fg"], insertbackground=a["fg"],
@@ -1993,27 +2002,56 @@ def screenshots(out_dir):
             os.path.join(out_dir, name + ".png"))
         print("saved", name)
 
+    # Screenshots only show an original demo theme and preview (no third-party theme art).
+    from PIL import Image as PILImage, ImageDraw
+    demo_dir = tempfile.mkdtemp(prefix="wiithemer_demo_")
+    preview = os.path.join(demo_dir, "My Custom Theme.png")
+    img = PILImage.new("RGB", (640, 480))
+    draw = ImageDraw.Draw(img)
+    for yy in range(480):
+        draw.line([(0, yy), (640, yy)], fill=(20 + yy // 8, 120 + yy // 6, 220 - yy // 5))
+    for i in range(6):
+        draw.ellipse([60 + i * 90, 300 - i * 20, 140 + i * 90, 380 - i * 20], outline="white", width=4)
+    draw.text((40, 40), "My Custom Theme", fill="white")
+    img.save(preview)
+    with zipfile.ZipFile(os.path.join(demo_dir, "My Custom Theme.mym"), "w") as z:
+        z.writestr("mym.ini", "[sdta]\n\n[cdta]\n\n[cont1]\nfile=example.png\n")
+        z.writestr("example.png", open(preview, "rb").read())
+    app.import_themes_from(demo_dir)
+    app.settings["catalog"]["favorites"] = ["My Custom Theme", "Dark Wii Blue"]
+    app.settings["catalog"]["sort"] = "favorites"
+    app.save_profile("Living room Wii")
+    app.rebuild()
+    for i in range(3):
+        app.add_history({"theme": "My Custom Theme", "display": ["4.3U", "4.2E", "4.3J"][i], "spin": "nospin",
+                         "path": os.path.join(os.path.expanduser("~"), "WiiThemer", f"my_custom_theme{i}.csm"),
+                         "sha256": hashlib.sha256(str(i).encode()).hexdigest(), "size": 6 << 20})
+
+    def show_demo():
+        app.theme_tree.selection_set("My Custom Theme")
+        app.on_theme_select()
+        app.note_box.insert("1.0", "Installed on the living room Wii - looks great with fastspin.")
+        settle(1.5)
+
     settle(1)
-    first = app.theme_tree.get_children()[5]
-    app.theme_tree.selection_set(first)
-    app.on_theme_select()
-    app.log("Building Black Pirate for 4.3U (nospin)...")
-    settle(6)  # let the preview download
+    show_demo()
+    app.log("Building My Custom Theme for 4.3U (nospin)...")
     grab("build")
-    app.nb.select(app.tab_frames["gallery"])
-    app.gallery_load()
-    settle(25)
-    grab("gallery")
-    for key in ("mym", "catalog", "history", "settings", "advanced"):
+    app.mym_open(os.path.join(demo_dir, "My Custom Theme.mym"))
+    app.mym_tree.selection_set("mym.ini")
+    app.mym_show()
+    for key in ("mym", "history", "settings", "advanced"):
         app.nb.select(app.tab_frames[key])
         grab(key)
-    for preset in ("Wii Classic", "Dark Wii Red"):
+    for preset in ("Wii Classic", "Dark Wii Red", "High Contrast"):
         app.use_preset(preset)
         settle(1)
-        app.theme_tree.selection_set(app.theme_tree.get_children()[5])
-        app.on_theme_select()
-        settle(5)
+        show_demo()
         grab("preset-" + preset.lower().replace(" ", "-"))
+    app.settings["appearance"]["language"] = "Español"
+    app.use_preset("Midnight")
+    show_demo()
+    grab("language-espanol")
     app.destroy()
 
 
