@@ -16,6 +16,10 @@
   <a href="https://a-hackers-guide.github.io/wiithemer-desktop/"><img alt="Website" src="https://img.shields.io/badge/website-online-34b6e8"></a>
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/build.png" width="820" alt="WiiThemer Desktop: the Build Theme tab">
+</p>
+
 ---
 
 ## Table of contents
@@ -204,6 +208,19 @@ The app makes a `.csm` file. To install it you need a **softmodded Wii** (with t
 ---
 
 ## The app, tab by tab
+
+| | |
+|---|---|
+| ![Build Theme tab](docs/screenshots/build.png) | ![MYM Editor tab](docs/screenshots/mym.png) |
+| **Build Theme**: pick a theme, version, region and spin, then build | **MYM Editor**: look inside and edit `.mym` files |
+| ![History tab](docs/screenshots/history.png) | ![Settings tab](docs/screenshots/settings.png) |
+| **History**: past builds with checksums and Copy to SD card | **Settings**: appearance, layout, language, build, tools |
+| ![Wii Classic preset](docs/screenshots/preset-wii-classic.png) | ![Dark Wii Red preset](docs/screenshots/preset-dark-wii-red.png) |
+| The **Wii Classic** color preset | The **Dark Wii Red** color preset |
+| ![High Contrast preset](docs/screenshots/preset-high-contrast.png) | ![Spanish interface](docs/screenshots/language-espanol.png) |
+| The **High Contrast** preset | The interface **in Spanish** |
+
+Screenshots use an original demo theme. To see the real built-in themes, browse the [website gallery](https://a-hackers-guide.github.io/wiithemer-desktop/).
 
 ### Build Theme
 
@@ -892,6 +909,13 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ---
 
 ## Changelog
+
+### v2.2.0
+- Fix: the **Build theme button was cut off** at the default window size (since v1.8). The preview and notes now sit side by side, and a self-test checks the button stays visible.
+- Fix: **read-only dropdowns** (Wii profile, Sort, Language) were hard to read in dark presets.
+- Fix: the **log panel** could be squeezed out of view at the default window size.
+- Smaller default preview (300 px) and log (6 lines).
+- **Screenshots** in the README and on the website, made by a new `--screenshots` mode and a manual "Screenshots" workflow. They use an original demo theme, so no third-party theme art is stored in this repo.
 
 ### v2.1.0
 - **Interface scale**, for high-resolution screens and accessibility.

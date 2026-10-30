@@ -581,7 +581,8 @@ class App(tk.Tk):
 
         logf = ttk.Frame(self)
         if a.get("show_log", True):
-            logf.pack(fill="x", padx=8, pady=(0, 8))
+            # Pack at the bottom before the notebook claims the space, so it never gets squeezed out.
+            logf.pack(side="bottom", fill="x", padx=8, pady=(0, 8), before=nb)
         self.log_box = tk.Text(logf, height=int(a.get("log_height", 8)), **self.text_opts)
         self.log_box.pack(fill="x")
         self.log(f"{APP_NAME} {APP_VERSION} on {platform.system()} - settings: {SETTINGS_FILE}")
@@ -1876,8 +1877,10 @@ def selftest():
     # The Build button must be fully visible at the default window size.
     app.nb.select(app.tab_frames["build"])
     app.update()
-    bottom = app.build_button.winfo_rooty() + app.build_button.winfo_height()
-    assert bottom <= app.winfo_rooty() + app.winfo_height(), (bottom, app.winfo_rooty(), app.winfo_height())
+    window_bottom = app.winfo_rooty() + app.winfo_height()
+    for widget in (app.build_button, app.log_box):
+        bottom = widget.winfo_rooty() + widget.winfo_height()
+        assert widget.winfo_ismapped() and bottom <= window_bottom, (str(widget), bottom, window_bottom)
     assert len(app.catalog) > 0 and os.path.exists(os.path.join(resource_dir(), "tools", "themewii.exe"))
     for i in range(len(app.nb.tabs())):
         app.nb.select(i)
