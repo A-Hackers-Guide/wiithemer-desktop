@@ -887,7 +887,7 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 - A **Random** button picks a theme for you.
 - Fix: **theme previews now show in the Linux AppImage** (PyInstaller was missing Pillow's Tk bridge). This affected Linux builds since v1.0.
 
-### v1.7.0
+### v1.7.0 (shipped as part of v1.8.0)
 - A **Gallery tab**: a thumbnail grid of every theme. Click one to pick it. Previews load one at a time and only when you ask, unless you turn on auto-loading.
 - Gallery columns, thumbnail size and auto-load settings.
 - New tabs now appear after updating, even if you customized your tab layout.

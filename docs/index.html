@@ -25,6 +25,7 @@ dialog::backdrop{background:#0008}dialog img{width:100%;border-radius:10px}
 dialog .row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
 pre{background:var(--bg);padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;font-size:14px}
 #count{color:var(--muted);align-self:center}
+.features{padding-left:20px}.features li{margin:6px 0}
 footer{color:var(--muted);margin-top:40px;font-size:14px}a{color:var(--accent)}
 </style>
 </head>
@@ -46,7 +47,22 @@ footer{color:var(--muted);margin-top:40px;font-size:14px}a{color:var(--accent)}
 <h2>How it works</h2>
 <p>Same steps as wiithemer.org: pick a theme, pick your System Menu version (4.0 to 4.3), pick your region (U, E, J, K), pick a channel spin, then build. The app makes a <code>.csm</code> file you install with a theme installer on a softmodded Wii. Always keep a NAND backup and Priiloader.</p>
 <p>What you can change: theme source (catalog, a local .mym, or any URL), the theme catalog itself, the spin mod, the output file name, the exact themewii build commands, extra System Menu versions, the tools and Wine command, plus colors, fonts and layout. There's also a built-in .mym editor and a raw JSON editor for every setting.</p>
-<p>More features: color presets, favorites, building many themes for many versions and regions at once, build history, a tool check, update notifications, and a command-line mode for scripts.</p>
+<h2>Features</h2>
+<ul class="features">
+  <li><b>All the platforms:</b> Windows, macOS (Apple Silicon and Intel), Linux (x86_64 and ARM64)</li>
+  <li><b>73 built-in themes</b> plus your own .mym files, themes from links, or whole folders</li>
+  <li><b>Gallery</b> of thumbnails, plus search, sorting, favorites, notes and a Random button</li>
+  <li><b>Batch builds:</b> many themes for many versions and regions in one go</li>
+  <li><b>Wii profiles</b> for each console in the house</li>
+  <li><b>MYM Editor:</b> open, edit and create theme mods</li>
+  <li><b>Customize everything:</b> colors, presets, fonts, layout, tab order, file names, the build steps, the tools, the catalog</li>
+  <li><b>Languages:</b> English, Español, Français, Deutsch, Português, and you can reword any text</li>
+  <li><b>Safety checks:</b> file size warnings, SHA-256 checksums, and a "Test tools" button</li>
+  <li><b>History</b> of builds, update notifications, menus and keyboard shortcuts, and a command-line mode</li>
+</ul>
+<p><a href="https://github.com/A-Hackers-Guide/wiithemer-desktop#readme">Read the full guide</a> ·
+<a href="https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/SHA256SUMS.txt">SHA256SUMS.txt</a> ·
+<a href="https://github.com/A-Hackers-Guide/wiithemer-desktop#changelog">Changelog</a></p>
 <h2>Theme gallery</h2>
 <div class="controls">
   <input id="q" placeholder="Search themes" aria-label="Search themes">
