@@ -38,6 +38,7 @@
    - [Settings](#settings)
    - [Advanced (JSON)](#advanced-json)
    - [Log panel](#log-panel)
+   - [Menus and keyboard shortcuts](#menus-and-keyboard-shortcuts)
 7. [Customization reference](#customization-reference)
    - [Every setting](#every-setting)
    - [Output file name template](#output-file-name-template)
@@ -210,6 +211,8 @@ The app makes a `.csm` file. To install it you need a **softmodded Wii** (with t
 | **Favorites only** | Shows only the themes you've starred. |
 | **Theme list** | Every theme that isn't hidden. **★** marks favorites. The **Source** column says where it comes from: `catalog` (built in), `local` (a file on your computer) or `url` (a link). **Ctrl-click / Cmd-click / Shift-click** selects several themes; **Build theme** then builds all of them. |
 | **★ button** | Stars or unstars the selected themes. |
+| **Double-click / Enter** | Builds the selected theme(s) right away. |
+| **Right-click** (Control-click on a Mac) | Opens a menu with Build, Batch build, Favorite, Hide, Remove (for themes you added) and Copy name. |
 | **Open .mym…** | Adds a `.mym` file from your computer to the list. You can also pick a preview image (PNG/JPG/GIF/AVIF/WebP), or skip it. |
 | **Add URL…** | Adds a theme by direct link to a `.mym` file, plus an optional preview image link. The file downloads when you build. |
 | **Preview** | Shows the theme's preview image. Built-in previews come from the original WiiThemer repository and are saved for later. |
@@ -286,6 +289,30 @@ The text box at the bottom of the window shows:
 - each build step and the exact command it runs
 - everything themewii prints
 - any error, with the full details
+
+### Menus and keyboard shortcuts
+
+On macOS, use **Cmd** where the tables say Ctrl.
+
+| Menu | Items |
+|---|---|
+| **File** | Open .mym theme…, **Import folder of .mym themes…**, Add theme from URL…, Build selected, Batch build…, Open output folder, Import/Export settings…, Quit |
+| **View** | Jump to any tab, **Color preset ▸** (all presets), Bigger text, Smaller text, Clear log |
+| **Help** | Website, User guide, Report a problem, Original WiiThemer, Open settings folder, Test tools, Check for updates, About |
+
+| Shortcut | Action |
+|---|---|
+| Ctrl+O | Open a `.mym` theme |
+| Ctrl+B | Build the selected theme(s) |
+| Ctrl+Shift+B | Batch build… |
+| Ctrl+F | Jump to the theme search box |
+| Ctrl+1 … Ctrl+6 | Switch tabs |
+| Ctrl+= / Ctrl+- | Bigger / smaller text (saved) |
+| Ctrl+Q | Quit (saves the window size and position) |
+
+**Import folder of .mym themes** adds every `.mym` file in a folder at once. If an image with the same name is next to a theme (for example `MyTheme.mym` and `MyTheme.png`), it becomes that theme's preview. Supported image types: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.avif`.
+
+The app remembers its **window size and position** when you close it.
 
 ---
 
@@ -796,6 +823,14 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ---
 
 ## Changelog
+
+### v1.3.0
+- A **menu bar** (File / View / Help) and **keyboard shortcuts**.
+- A **right-click menu**, plus double-click or Enter to build.
+- **Import a whole folder** of `.mym` themes, using images with the same name as previews.
+- Bigger/smaller text shortcuts, a color preset menu, and an About box.
+- Remembers the window size and position.
+- A broader self-test.
 
 ### v1.2.0
 - New downloads: **macOS Intel** (`-Intel.dmg` / `-Intel.app.zip`) and **Linux ARM64** (`-aarch64.AppImage`).

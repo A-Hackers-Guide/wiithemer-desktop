@@ -26,7 +26,9 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.2.0"
+APP_VERSION = "1.3.0"
+MOD = "Command" if sys.platform == "darwin" else "Control"
+MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
 
 # Color presets for Settings > Appearance.
@@ -342,6 +344,7 @@ class App(tk.Tk):
         self.build_ui()
         self.refresh_theme_list()
         self.after(100, self.drain)
+        self.protocol("WM_DELETE_WINDOW", self.quit_app)
         if self.settings["general"]["check_for_updates"] and "--selftest" not in sys.argv:
             threading.Thread(target=self.check_updates, daemon=True).start()
 
@@ -413,6 +416,161 @@ class App(tk.Tk):
         self.log_box = tk.Text(logf, height=8, **self.text_opts)
         self.log_box.pack(fill="x")
         self.log(f"{APP_NAME} {APP_VERSION} on {platform.system()} - settings: {SETTINGS_FILE}")
+        self.build_menu()
+        self.bind_shortcuts()
+
+    # ---------- menus and shortcuts ----------
+    def build_menu(self):
+        a = self.settings["appearance"]
+        opts = dict(tearoff=0, bg=a["field_bg"], fg=a["fg"], activebackground=a["accent"],
+                    activeforeground=a["accent_fg"])
+        bar = tk.Menu(self, **opts)
+        m = tk.Menu(bar, **opts)
+        m.add_command(label="Open .mym theme…", accelerator=f"{MOD_LABEL}+O", command=self.add_local_theme)
+        m.add_command(label="Import folder of .mym themes…", command=self.import_folder)
+        m.add_command(label="Add theme from URL…", command=self.add_url_theme)
+        m.add_separator()
+        m.add_command(label="Build selected", accelerator=f"{MOD_LABEL}+B", command=self.start_build)
+        m.add_command(label="Batch build…", accelerator=f"{MOD_LABEL}+Shift+B", command=self.batch_dialog)
+        m.add_command(label="Open output folder", command=self.open_output)
+        m.add_separator()
+        m.add_command(label="Import settings…", command=self.import_settings)
+        m.add_command(label="Export settings…", command=self.export_settings)
+        m.add_separator()
+        m.add_command(label="Quit", accelerator=f"{MOD_LABEL}+Q", command=self.quit_app)
+        bar.add_cascade(label="File", menu=m)
+
+        v = tk.Menu(bar, **opts)
+        for i in range(len(self.nb.tabs())):
+            v.add_command(label=self.nb.tab(i, "text"), accelerator=f"{MOD_LABEL}+{i + 1}",
+                          command=lambda i=i: self.nb.select(i))
+        v.add_separator()
+        presets = tk.Menu(v, **opts)
+        for name in PRESETS:
+            presets.add_command(label=name, command=lambda n=name: self.use_preset(n))
+        v.add_cascade(label="Color preset", menu=presets)
+        v.add_command(label="Bigger text", accelerator=f"{MOD_LABEL}+=", command=lambda: self.zoom(1))
+        v.add_command(label="Smaller text", accelerator=f"{MOD_LABEL}+-", command=lambda: self.zoom(-1))
+        v.add_command(label="Clear log", command=lambda: self.log_box.delete("1.0", "end"))
+        bar.add_cascade(label="View", menu=v)
+
+        h = tk.Menu(bar, **opts)
+        for label, url in [("Website", "https://a-hackers-guide.github.io/wiithemer-desktop/"),
+                           ("User guide (README)", f"https://github.com/{REPO}#readme"),
+                           ("Report a problem", f"https://github.com/{REPO}/issues/new"),
+                           ("Original WiiThemer", "https://github.com/scooby7402976/wiithemer")]:
+            h.add_command(label=label, command=lambda u=url: open_path(u))
+        h.add_command(label="Open settings folder", command=lambda: open_path(config_dir()))
+        h.add_command(label="Test tools", command=self.test_tools)
+        h.add_command(label="Check for updates",
+                      command=lambda: threading.Thread(target=self.check_updates, args=(True,),
+                                                       daemon=True).start())
+        h.add_separator()
+        h.add_command(label=f"About {APP_NAME}", command=self.about)
+        bar.add_cascade(label="Help", menu=h)
+        self.config(menu=bar)
+
+        # Right-click menu for the theme list.
+        self.theme_menu = tk.Menu(self, **opts)
+        self.theme_menu.add_command(label="Build", command=self.start_build)
+        self.theme_menu.add_command(label="Batch build…", command=self.batch_dialog)
+        self.theme_menu.add_command(label="Favorite / unfavorite", command=self.toggle_favorite)
+        self.theme_menu.add_command(label="Hide", command=self.hide_selected)
+        self.theme_menu.add_command(label="Remove (custom themes)", command=self.remove_selected_custom)
+        self.theme_menu.add_command(label="Copy name", command=self.copy_theme_name)
+
+    def bind_shortcuts(self):
+        keys = {"o": self.add_local_theme, "b": self.start_build, "B": self.batch_dialog,
+                "q": self.quit_app, "f": self.focus_search,
+                "equal": lambda: self.zoom(1), "plus": lambda: self.zoom(1), "minus": lambda: self.zoom(-1)}
+        for key, fn in keys.items():
+            self.bind_all(f"<{MOD}-{key}>", lambda e, fn=fn: (fn(), "break")[1])
+        for i in range(len(self.nb.tabs())):
+            self.bind_all(f"<{MOD}-Key-{i + 1}>", lambda e, i=i: self.nb.select(i))
+        self.theme_tree.bind("<Double-1>", lambda e: self.start_build())
+        self.theme_tree.bind("<Return>", lambda e: self.start_build())
+        for seq in ("<Button-3>", "<Button-2>" if sys.platform == "darwin" else "<Button-3>",
+                    "<Control-Button-1>" if sys.platform == "darwin" else "<Button-3>"):
+            self.theme_tree.bind(seq, self.theme_context)
+
+    def theme_context(self, event):
+        row = self.theme_tree.identify_row(event.y)
+        if row and row not in self.theme_tree.selection():
+            self.theme_tree.selection_set(row)
+        try:
+            self.theme_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.theme_menu.grab_release()
+
+    def focus_search(self):
+        self.nb.select(0)
+        self.search_entry.focus_set()
+
+    def zoom(self, step):
+        a = self.settings["appearance"]
+        a["font_size"] = max(7, min(32, int(a["font_size"]) + step))
+        self.rebuild()
+
+    def use_preset(self, name):
+        self.settings["appearance"].update(PRESETS[name])
+        self.rebuild()
+
+    def hide_selected(self):
+        hidden = self.settings["catalog"]["hidden_themes"]
+        hidden.extend(n for n in self.theme_tree.selection() if n not in hidden)
+        self.persist()
+        self.refresh_theme_list()
+        self.log("Hidden themes can be shown again from the Catalog tab.")
+
+    def remove_selected_custom(self):
+        names = set(self.theme_tree.selection())
+        customs = self.settings["catalog"]["custom_themes"]
+        before = len(customs)
+        customs[:] = [t for t in customs if t["name"] not in names]
+        if len(customs) == before:
+            self.log("Only themes you added can be removed; built-in themes can be hidden.")
+        self.rebuild()
+
+    def copy_theme_name(self):
+        self.clipboard_clear()
+        self.clipboard_append("\n".join(self.theme_tree.selection()))
+
+    def import_folder(self):
+        d = filedialog.askdirectory(title="Folder containing .mym themes")
+        if d:
+            self.log(f"Imported {self.import_themes_from(d)} theme(s) from {d}")
+
+    def import_themes_from(self, folder):
+        """Add every .mym in a folder; an image with the same name becomes its preview."""
+        count = 0
+        for name in sorted(os.listdir(folder)):
+            if not name.lower().endswith(".mym"):
+                continue
+            stem = os.path.splitext(name)[0]
+            preview = next((os.path.join(folder, stem + ext) for ext in
+                            (".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif")
+                            if os.path.isfile(os.path.join(folder, stem + ext))), None)
+            self.add_custom({"name": stem, "file": os.path.join(folder, name),
+                             "preview": preview, "source": "local"})
+            count += 1
+        return count
+
+    def about(self):
+        messagebox.showinfo(f"About {APP_NAME}", (
+            f"{APP_NAME} {APP_VERSION}\n\n"
+            "A cross-platform port of WiiThemer by scooby7402976.\n"
+            "Themes belong to their creators. Not affiliated with Nintendo.\n\n"
+            f"License: GPL-2.0\nhttps://github.com/{REPO}\n\n"
+            f"Python {platform.python_version()}, Tk {tk.TkVersion}, {platform.system()} {platform.machine()}"))
+
+    def quit_app(self):
+        try:
+            if self.state() == "normal":
+                self.settings["appearance"]["window_geometry"] = self.geometry()
+            self.persist()
+        except Exception:
+            pass
+        self.destroy()
 
     def build_tab(self, parent):
         b = self.settings["build"]
@@ -422,7 +580,8 @@ class App(tk.Tk):
         ttk.Label(left, text="Themes", style="Header.TLabel").pack(anchor="w")
         self.search = tk.StringVar()
         self.search.trace_add("write", lambda *_: self.refresh_theme_list())
-        ttk.Entry(left, textvariable=self.search).pack(fill="x", pady=4)
+        self.search_entry = ttk.Entry(left, textvariable=self.search)
+        self.search_entry.pack(fill="x", pady=4)
         self.fav_only = tk.BooleanVar(value=False)
         ttk.Checkbutton(left, text="Favorites only", variable=self.fav_only,
                         command=self.refresh_theme_list).pack(anchor="w")
@@ -1194,6 +1353,21 @@ def selftest():
     for name in PRESETS:
         app.settings["appearance"].update(PRESETS[name])
         app.apply_appearance()
+    folder = tempfile.mkdtemp(prefix="wiithemer_import_")
+    with zipfile.ZipFile(os.path.join(folder, "demo.mym"), "w") as z:
+        z.writestr("mym.ini", "[sdta]\n")
+    assert app.import_themes_from(folder) == 1 and app.theme_tree.exists("demo")
+    app.theme_tree.selection_set("demo")
+    app.hide_selected()
+    assert not app.theme_tree.exists("demo")
+    app.settings["catalog"]["hidden_themes"].clear()
+    app.refresh_theme_list()
+    app.theme_tree.selection_set("demo")
+    app.remove_selected_custom()
+    app.zoom(1)
+    app.zoom(-1)
+    app.use_preset("Wii Classic")
+    app.focus_search()
     app.mym_new()
     app.add_history({"theme": "t", "display": "4.3U", "spin": "nospin", "path": "x.csm"})
     app.history_clear()
