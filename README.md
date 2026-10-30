@@ -1,48 +1,705 @@
-# WiiThemer Desktop
+<p align="center">
+  <img src="packaging/icon.png" width="128" alt="WiiThemer Desktop icon">
+</p>
 
-A cross-platform desktop port of [WiiThemer](https://github.com/scooby7402976/wiithemer) (release 1.0) by scooby7402976. It builds custom Wii System Menu theme files (`.csm`) from `.mym` theme mods.
+<h1 align="center">WiiThemer Desktop</h1>
 
-**Website:** https://a-hackers-guide.github.io/wiithemer-desktop/
+<p align="center">
+  Build custom Wii System Menu themes on <b>Windows</b>, <b>macOS</b> and <b>Linux</b>.<br>
+  A cross-platform desktop port of <a href="https://github.com/scooby7402976/wiithemer">WiiThemer</a>, where you can change every setting.
+</p>
+
+<p align="center">
+  <a href="https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/A-Hackers-Guide/wiithemer-desktop?label=release"></a>
+  <a href="https://github.com/A-Hackers-Guide/wiithemer-desktop/actions/workflows/release.yml"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/A-Hackers-Guide/wiithemer-desktop/release.yml?branch=main"></a>
+  <a href="LICENSE"><img alt="License: GPL-2.0" src="https://img.shields.io/badge/license-GPL--2.0-blue"></a>
+  <a href="https://a-hackers-guide.github.io/wiithemer-desktop/"><img alt="Website" src="https://img.shields.io/badge/website-online-34b6e8"></a>
+</p>
+
+---
+
+## Table of contents
+
+1. [What is this?](#what-is-this)
+2. [Downloads](#downloads)
+3. [Installing](#installing)
+   - [Windows](#windows)
+   - [macOS](#macos)
+   - [Linux](#linux)
+   - [Installing Wine (macOS and Linux)](#installing-wine-macos-and-linux)
+4. [Quick start: your first theme](#quick-start-your-first-theme)
+5. [Installing the theme on your Wii](#installing-the-theme-on-your-wii)
+6. [The app, tab by tab](#the-app-tab-by-tab)
+   - [Build Theme](#build-theme)
+   - [MYM Editor](#mym-editor)
+   - [Catalog](#catalog)
+   - [Settings](#settings)
+   - [Advanced (JSON)](#advanced-json)
+   - [Log panel](#log-panel)
+7. [Customization reference](#customization-reference)
+   - [Every setting](#every-setting)
+   - [Output file name template](#output-file-name-template)
+   - [The build pipeline](#the-build-pipeline)
+   - [Adding System Menu versions](#adding-system-menu-versions)
+   - [Hosting your own theme catalog](#hosting-your-own-theme-catalog)
+   - [Sharing your setup](#sharing-your-setup)
+8. [System Menu versions and regions](#system-menu-versions-and-regions)
+9. [Channel spin options](#channel-spin-options)
+10. [Built-in theme list](#built-in-theme-list)
+11. [About .mym and .csm files](#about-mym-and-csm-files)
+12. [Where files are stored](#where-files-are-stored)
+13. [Running and building from source](#running-and-building-from-source)
+14. [How releases are made](#how-releases-are-made)
+15. [Project layout](#project-layout)
+16. [Troubleshooting](#troubleshooting)
+17. [FAQ](#faq)
+18. [Safety: read before installing themes](#safety-read-before-installing-themes)
+19. [Credits](#credits)
+20. [License and legal](#license-and-legal)
+
+---
+
+## What is this?
+
+[WiiThemer](https://github.com/scooby7402976/wiithemer) (wiithemer.org) is a website by **scooby7402976** for building custom Wii Menu themes. You pick a theme, your System Menu version and your region. The server builds a `.csm` theme file for you to download.
+
+**WiiThemer Desktop** does the same thing as a desktop app on your own computer:
+
+- **No server.** Builds run on your machine, and nothing expires after 3 minutes.
+- **Three platforms.** Windows `.exe`, macOS `.app` (as a `.dmg` or `.zip`), and Linux `.AppImage`.
+- **Everything is customizable.** You can change:
+  - the theme source and the catalog it comes from
+  - the version and region
+  - the spin mod and the output name
+  - the exact build commands and the tools they use
+  - the colors, fonts and layout of the app itself
+- **Built-in `.mym` editor.** Open, edit and create theme mods without other tools.
+- **The same 73 themes** as WiiThemer 1.0, downloaded only when you use them.
+
+Release 1.0 of this project copies the build behavior of WiiThemer release [1.0](https://github.com/scooby7402976/wiithemer/releases/tag/1.0). It uses the same version table, the same order of steps, and the same "spin first" themes.
+
+---
 
 ## Downloads
 
-Grab them from [Releases](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest):
+Go to the **[latest release](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest)**, or use these direct links:
 
-| Platform | File |
-|---|---|
-| Windows | `WiiThemerDesktop-Windows.exe` |
-| macOS | `WiiThemerDesktop-macOS.dmg` or `WiiThemerDesktop-macOS.app.zip` (contains the `.app`) |
-| Linux | `WiiThemerDesktop-Linux-x86_64.AppImage` |
+| Platform | File | Notes |
+|---|---|---|
+| Windows 10/11 (x64) | [`WiiThemerDesktop-Windows.exe`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-Windows.exe) | A single file. No installer needed. |
+| macOS (Apple Silicon) | [`WiiThemerDesktop-macOS.dmg`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-macOS.dmg) | Drag the `.app` to Applications. |
+| macOS (Apple Silicon) | [`WiiThemerDesktop-macOS.app.zip`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-macOS.app.zip) | The same `.app` as the `.dmg`, zipped. |
+| Linux (x86_64) | [`WiiThemerDesktop-Linux-x86_64.AppImage`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-Linux-x86_64.AppImage) | Works on most distros from 2022 onward (built on Ubuntu 22.04). |
 
-The builds aren't code-signed. On macOS, right-click the app and choose **Open** the first time. On Linux, run `chmod +x` on the AppImage first.
+Website with a theme gallery: **https://a-hackers-guide.github.io/wiithemer-desktop/**
 
-## Requirements
+---
 
-The theme build step uses the original `themewii.exe`, which is a Windows .NET program.
+## Installing
 
-- **Windows:** works out of the box (you need .NET Framework, which is usually already installed).
-- **macOS / Linux:** install Wine with wine-mono (`brew install --cask wine-stable`, or `sudo apt install wine`). You can change the Wine command in Settings → Tools.
+### Windows
 
-themewii downloads the System Menu file for your version. You can also point the app at your own NAND-dumped System Menu `.app` instead.
+1. Download `WiiThemerDesktop-Windows.exe`.
+2. Double-click it.
+3. Windows SmartScreen may say "Windows protected your PC" because the app isn't code-signed. Click **More info**, then **Run anyway**.
+4. The theme builder (`themewii.exe`) needs the **.NET Framework**. Windows 10 and 11 already include it.
 
-## You can customize everything
+### macOS
 
-- **Theme source:** pick from the 73-theme catalog, open a local `.mym`, or add one by URL
-- **Catalog:** change the base URL (to a fork or your own server), and hide or show themes
-- **Build:** System Menu version and region, spin mod (nospin, spin, fastspin, transchan, or your own `.mym`), whether the spin is applied first, the output folder, and the file name template
-- **Pipeline:** edit the exact themewii commands run for every build, and add extra System Menu versions (Advanced tab)
-- **Tools:** use your own themewii.exe, set the Wine command, the key argument, and step timeouts
-- **Appearance:** widget style, font, size, every color, preview size, and window title
-- **MYM editor:** open, create, or edit `.mym` files (edit `mym.ini`, replace, extract, or add images), then save them and add them to your list
-- **Settings:** import, export, or reset them, or edit them all as raw JSON
+1. Download the `.dmg`, open it, and drag **WiiThemerDesktop** into **Applications**. Or unzip the `.app.zip`.
+2. The app isn't signed or notarized, so the first time you open it:
+   - **right-click** (or Control-click) the app, choose **Open**, then click **Open** again, **or**
+   - go to **System Settings → Privacy & Security** and click **Open Anyway**.
+3. If macOS says the app "is damaged and can't be opened", that's the quarantine flag on downloaded files. Remove it with:
 
-## Run from source
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/WiiThemerDesktop.app
+   ```
 
+4. Install Wine, which the build step needs. See [Installing Wine](#installing-wine-macos-and-linux).
+
+### Linux
+
+1. Download `WiiThemerDesktop-Linux-x86_64.AppImage`.
+2. Make it executable and run it:
+
+   ```bash
+   chmod +x WiiThemerDesktop-Linux-x86_64.AppImage
+   ```
+
+   ```bash
+   ./WiiThemerDesktop-Linux-x86_64.AppImage
+   ```
+
+3. If you get an error about FUSE, install `libfuse2` (`sudo apt install libfuse2` on Ubuntu/Debian), or run it with `--appimage-extract-and-run`.
+4. Install Wine, which the build step needs. See [Installing Wine](#installing-wine-macos-and-linux).
+
+### Installing Wine (macOS and Linux)
+
+The program that actually applies the theme, `themewii.exe`, comes from the original WiiThemer project and is a Windows .NET program. On macOS and Linux the app runs it through [Wine](https://www.winehq.org/).
+
+**macOS** (with [Homebrew](https://brew.sh)):
+
+```bash
+brew install --cask wine-stable
 ```
+
+**Ubuntu / Debian:**
+
+```bash
+sudo apt install wine
+```
+
+**Fedora:**
+
+```bash
+sudo dnf install wine
+```
+
+**Arch:**
+
+```bash
+sudo pacman -S wine wine-mono
+```
+
+The first time Wine runs, it may ask to install **Wine Mono**. Say yes, because themewii needs it. If your Wine command has a different name (for example `wine64`, or a full path to Wine), set it in **Settings → Tools → Wine command**.
+
+---
+
+## Quick start: your first theme
+
+1. Open WiiThemer Desktop. The **Build Theme** tab lists all 73 built-in themes.
+2. Type in the search box to filter, then click a theme to see its preview.
+3. Pick your **System Menu version**. On the Wii: **Wii Settings**, then the number in the top-right corner, for example `4.3U`.
+4. Pick your **Region**: the letter after the version (U = USA, E = Europe, J = Japan, K = Korea).
+5. Pick a **Channel spin** (see [Channel spin options](#channel-spin-options)). `nospin` is the default.
+6. Pick where to save (**Save to**). The default is a `WiiThemer` folder in your home folder.
+7. Click **Build theme**. The log panel at the bottom shows each step. When it's done, a popup shows the path to your `.csm` file.
+
+The first time you build a given version and region, themewii downloads the matching System Menu file. Later builds are faster.
+
+---
+
+## Installing the theme on your Wii
+
+The app makes a `.csm` file. To install it you need a **softmodded Wii** (with the Homebrew Channel) and a theme installer such as **csm-installer** or **MyMenuify**. In short:
+
+1. Copy the `.csm` file to the `themes` folder on your SD card or USB drive. Check your installer's instructions for the exact folder.
+2. Open the installer from the Homebrew Channel, choose the theme, and install it.
+
+**Before you do this, read [Safety](#safety-read-before-installing-themes).** Installing a theme built for the wrong version or region can brick a Wii that doesn't have protection.
+
+---
+
+## The app, tab by tab
+
+### Build Theme
+
+| Control | What it does |
+|---|---|
+| **Search box** | Filters the theme list as you type. |
+| **Theme list** | Every theme that isn't hidden. The **Source** column says where it comes from: `catalog` (built in), `local` (a file on your computer) or `url` (a link). |
+| **Open .mym…** | Adds a `.mym` file from your computer to the list. You can also pick a preview image (PNG/JPG/GIF/AVIF/WebP), or skip it. |
+| **Add URL…** | Adds a theme by direct link to a `.mym` file, plus an optional preview image link. The file downloads when you build. |
+| **Preview** | Shows the theme's preview image. Built-in previews come from the original WiiThemer repository and are saved for later. |
+| **System Menu version** | `4.3`, `4.2`, `4.1` or `4.0`. |
+| **Region** | `U`, `E`, `J` or `K`. |
+| **Channel spin** | `nospin`, `spin`, `fastspin` or `transchan`. |
+| **Apply spin first** | `auto` follows WiiThemer's rule (only Black Pirate, Matrix, Matrix Reloaded and Muse apply the spin mod first). `yes` and `no` force it either way. |
+| **Save to** | The folder the finished `.csm` is copied to. |
+| **Own System Menu .app** | Optional. Point this at your own copy of your System Menu content file (for example `00000097.app` dumped from your NAND). It's then used instead of downloading. |
+| **Build theme** | Starts the build. The app stays usable while it runs. |
+
+The app remembers everything you choose here for next time.
+
+### MYM Editor
+
+A small editor for `.mym` theme mods. A `.mym` file is a zip archive: a `mym.ini` file plus images and other files.
+
+| Button | What it does |
+|---|---|
+| **Open .mym** | Opens a `.mym` file and lists everything inside it. |
+| **New** | Starts an empty `.mym` with a starter `mym.ini`. |
+| **Add/replace file** | Adds files. If **one** item is selected and you pick **one** file, it replaces the selected item and keeps its name inside the archive. |
+| **Extract** | Saves the selected item to your computer. |
+| **Delete** | Removes the selected item. |
+| **Save text** | Saves the text you edited (for example `mym.ini`) back into the archive. |
+| **Save .mym as…** | Writes a new `.mym`, then offers to add it to your theme list. |
+
+Click an item to view it. Text files open as editable text, and PNG/JPG/GIF files show as an image. Other files show their size, so you can extract them, edit them elsewhere, and add them back.
+
+### Catalog
+
+- **Base URL**: where built-in themes and previews are downloaded from. It points at the original WiiThemer 1.0 release by default:
+  `https://raw.githubusercontent.com/scooby7402976/wiithemer/1.0/`
+- **Show/hide selected**: hides themes you don't want in the Build list (you can select several).
+- **Remove custom theme**: deletes a local or URL theme you added. Built-in themes can be hidden but not removed.
+- **Clear download cache**: deletes saved `.mym` files and previews so they download fresh.
+- **Apply**: saves the base URL.
+
+### Settings
+
+A form for the most common settings. Click **Apply** to save; the app redraws itself with the changes.
+
+- **Appearance:** widget style, font, font size, background, text, accent, text-on-accent, field and selection colors (each with a **Pick** color picker), preview width and window title.
+- **Build:** output file name template, keep work folder, and also save the System Menu `.app`.
+- **Tools:** a custom `themewii.exe`, the Wine command, use Wine on Windows, the themewii key argument, and the step timeout.
+- **Import… / Export…** settings as JSON, and **Reset to defaults**.
+
+### Advanced (JSON)
+
+**Every** setting as editable JSON, including things the form doesn't show: the build pipeline, extra System Menu versions, the custom theme list, hidden themes and catalog paths. Edit it and press **Save**. If the JSON is invalid you get an error and nothing changes. **Restore default pipeline** puts back the original WiiThemer build steps.
+
+### Log panel
+
+The text box at the bottom of the window shows:
+- each download
+- each build step and the exact command it runs
+- everything themewii prints
+- any error, with the full details
+
+---
+
+## Customization reference
+
+### Every setting
+
+Settings are stored in `settings.json` (see [Where files are stored](#where-files-are-stored)). Any key you leave out uses its default value.
+
+#### `appearance`
+
+| Key | Default | Description |
+|---|---|---|
+| `ttk_theme` | `"clam"` | Tk widget style (`clam`, `alt`, `default`, `classic`; plus `aqua` on macOS and `vista`/`xpnative` on Windows). |
+| `font_family` | `"Helvetica"` | Font used throughout the app. |
+| `font_size` | `11` | Base font size. Headers are 6 points larger. |
+| `bg` | `"#1e1f26"` | Window background. |
+| `fg` | `"#e8e8ee"` | Text color. |
+| `accent` | `"#34b6e8"` | Accent color: main buttons, selected tab, headers. |
+| `accent_fg` | `"#0b1016"` | Text color on top of the accent. |
+| `field_bg` | `"#2a2c36"` | Background of inputs, lists and text boxes. |
+| `select_bg` | `"#34b6e8"` | Background of selected rows. |
+| `preview_size` | `360` | Largest preview image size, in pixels. |
+| `window_geometry` | `"1100x720"` | Starting window size (and position), Tk style: `WIDTHxHEIGHT+X+Y`. |
+| `window_title` | `"WiiThemer Desktop"` | Window title. |
+
+#### `build`
+
+| Key | Default | Description |
+|---|---|---|
+| `version` | `"4.3"` | Last chosen System Menu version. |
+| `region` | `"U"` | Last chosen region. |
+| `spin` | `"nospin"` | Spin mod: a built-in name (`nospin`, `spin`, `fastspin`, `transchan`) **or a full path to your own `.mym`**. |
+| `output_dir` | `~/WiiThemer` | Where finished `.csm` files go. |
+| `filename_template` | `"{theme_name}{display}{spin_suffix}.csm"` | See [Output file name template](#output-file-name-template). |
+| `keep_work_dir` | `false` | Keep the temporary build folder for debugging. Its path is printed in the log. |
+| `save_base_app` | `false` | Also copy the downloaded System Menu file (`000000XX.app`) to the output folder. |
+| `base_app_path` | `""` | Use your own System Menu content file instead of downloading one. |
+| `run_first_override` | `"auto"` | `auto`, `yes` or `no`: whether the spin mod is applied before the theme. |
+| `pipeline` | *(see below)* | The exact build commands. |
+| `extra_versions` | `{}` | More System Menu versions, for example `{"4.3X": "ab"}`. |
+
+#### `tools`
+
+| Key | Default | Description |
+|---|---|---|
+| `themewii_path` | `""` | Path to a different `themewii.exe`. Every file in its folder is copied into the work folder, so DLLs next to it are included. |
+| `wine_command` | `"wine"` | The command that runs Windows programs on macOS/Linux. Arguments are allowed, for example `"wine64"` or `"/opt/wine/bin/wine"`. |
+| `use_wine_on_windows` | `false` | Run themewii through Wine even on Windows. Rarely needed. |
+| `key` | `"wiithemer_______Scooby74029"` | The key argument WiiThemer passes to themewii on every call. |
+| `timeout_seconds` | `600` | Maximum time for each build step before it's stopped. |
+
+#### `catalog`
+
+| Key | Default | Description |
+|---|---|---|
+| `base_url` | WiiThemer 1.0 raw URL | Root of the theme library. Must end with `/`. |
+| `mym_path` | `"mym/"` | Folder of `.mym` files inside the base URL. |
+| `preview_path` | `"previewpics/"` | Folder of preview images inside the base URL. |
+| `custom_themes` | `[]` | Themes you added: `{"name", "file", "preview", "source": "local" \| "url"}`. |
+| `hidden_themes` | `[]` | Names of themes hidden from the Build list. |
+
+### Output file name template
+
+`build.filename_template` uses Python `str.format` placeholders:
+
+| Placeholder | Example | Meaning |
+|---|---|---|
+| `{theme_name}` | `black_pirate` | The theme file name without `.mym`. |
+| `{theme_label}` | `Black Pirate` | The name shown in the list. |
+| `{display}` | `4.3U` | Version and region together. |
+| `{version}` | `4.3` | Version only. |
+| `{region}` | `U` | Region only. |
+| `{appid}` | `97` | The System Menu content id. |
+| `{spin}` | `nospin` | The spin choice as you entered it. |
+| `{spin_suffix}` | `_nospin` | `_` plus the spin mod's file name. |
+
+Examples:
+
+- `{theme_name}{display}{spin_suffix}.csm` gives `black_pirate4.3U_nospin.csm` (the default, same as wiithemer.org)
+- `{theme_label} ({display}).csm` gives `Black Pirate (4.3U).csm`
+- `{region}/{theme_name}.csm`: subfolders are **not** created automatically, so stick to plain file names.
+
+### The build pipeline
+
+Every build runs a list of commands in a temporary work folder. That folder holds the themewii tools, the theme `.mym` and the spin `.mym`. There are two lists:
+- `normal` is used for most themes
+- `run_first` is used when the spin mod is applied first
+
+The defaults match wiithemer.org's `index.php` exactly:
+
+```json
+"pipeline": {
+  "normal": [
+    "{themewii} {appid} {key}",
+    "{themewii} {theme} {appid} 000000{appid}.app {key}",
+    "{themewii} {spin} {appid}.app {output} {key}"
+  ],
+  "run_first": [
+    "{themewii} {appid} {key}",
+    "{themewii} {spin} {appid} 000000{appid}.app {key}",
+    "{themewii} {theme} {appid}.app {output} {key}"
+  ]
+}
+```
+
+| Placeholder | Becomes |
+|---|---|
+| `{themewii}` | The themewii program. Gets `wine` in front of it on macOS/Linux. |
+| `{theme}` | The theme `.mym` file name in the work folder. |
+| `{spin}` | The spin `.mym` file name in the work folder. |
+| `{appid}` | The System Menu content id, for example `97`. |
+| `{output}` | The output file name from your template. |
+| `{key}` | `tools.key`. |
+| `{display}`, `{version}`, `{region}` | As in the file name template. |
+
+Rules:
+- A step that starts with `{themewii}` runs themewii (through Wine where needed).
+- Any other step runs **as written**, so you can call other tools, for example `ASH.exe` (also bundled), your own scripts, or `7z`.
+- The download step (`{themewii} {appid} {key}`) is skipped automatically when `000000{appid}` already exists, for example when you set **Own System Menu .app**.
+- If any step exits with an error, the build stops and the log shows the output.
+- After the last step, `{output}` must exist. It's then copied to your output folder.
+
+**Example: stack an extra mod.** To apply a second `.mym` on top of the theme, put it next to your custom `themewii.exe` (its whole folder is copied into the work folder). Then add a step before the last one:
+
+```json
+"{themewii} my_extra_mod.mym {appid} 000000{appid}.app {key}"
+```
+
+### Adding System Menu versions
+
+Add entries under `build.extra_versions` in the Advanced tab. Each maps `"<version><region>"` to a content id:
+
+```json
+"extra_versions": { "4.3X": "ab" }
+```
+
+The version and region boxes accept typed values, so type `4.3` and `X` to use it.
+
+### Hosting your own theme catalog
+
+1. Make a folder (a GitHub repo, a fork of WiiThemer, or any web server) with:
+
+   ```
+   mym/<file>.mym
+   previewpics/<image>
+   ```
+
+2. Point **Catalog → Base URL** at its root, ending in `/`. For a GitHub repo:
+   `https://raw.githubusercontent.com/<you>/<repo>/<branch>/`
+3. The built-in list (names, files, previews, regions) comes from `app/catalog.json`. To change that list itself, edit `app/catalog.json` and run or build from source. Or add themes one at a time with **Add URL…**.
+
+Region-specific themes use `{r}` in the file name. It's replaced with the region letter in lowercase (`dark_wii_red{r}.mym` becomes `dark_wii_redu.mym`), and `regions` lists which ones exist.
+
+### Sharing your setup
+
+Use **Settings → Export…** to save one `wiithemer-settings.json` with your colors, pipeline, custom themes and everything else. Someone else can load it with **Import…**. Custom themes that point to local files only work on the computer that has those files. Use URL themes for setups you share.
+
+---
+
+## System Menu versions and regions
+
+These are the content ids WiiThemer uses (from `getappndisplayname()` in the original `index.php`):
+
+| Version | U (USA) | E (Europe) | J (Japan) | K (Korea) |
+|---|---|---|---|---|
+| 4.3 | `97` | `9a` | `94` | `9d` |
+| 4.2 | `87` | `8a` | `84` | `8d` |
+| 4.1 | `7b` | `7e` | `78` | `81` |
+| 4.0 | `72` | `75` | `70` | — (there was no Korean 4.0) |
+
+Known limits, carried over from WiiThemer:
+- **Dark Wii Red** wasn't officially made for the Korean region.
+- WiiThemer noted that **4.0J** builds were broken at the time (the file came out too small). Check that the file size looks normal before installing.
+
+---
+
+## Channel spin options
+
+These are small `.mym` mods, bundled in `app/spins/`, that change how the channel previews on the Wii Menu move:
+
+| Option | Effect |
+|---|---|
+| `nospin` | Channels stay still (the default). |
+| `spin` | Channels spin. |
+| `fastspin` | Channels spin faster. |
+| `transchan` | The transparent-channel mod. |
+| *path to a `.mym`* | Your own mod used in the spin step. Set `build.spin` to its full path in the Advanced tab. |
+
+---
+
+## Built-in theme list
+
+These 73 themes come from WiiThemer 1.0. They're downloaded from the original repository when you build or preview them. `{r}` means there's a separate file for each region.
+
+| # | Theme | File | Regions |
+|---|---|---|---|
+| 1 | Animal Crossing | `animal_crossing.mym` | U, E, J, K |
+| 2 | Bakugan | `Bakugan.mym` | U, E, J, K |
+| 3 | Batman v1 | `batman_v1.mym` | U, E, J, K |
+| 4 | Batman v2 | `batman_v2.mym` | U, E, J, K |
+| 5 | Black Mage | `black_mage.mym` | U, E, J, K |
+| 6 | Black Pirate | `black_pirate.mym` | U, E, J, K |
+| 7 | Bleach | `bleach.mym` | U, E, J, K |
+| 8 | Bowser | `bowser.mym` | U, E, J, K |
+| 9 | Broly | `broly.mym` | U, E, J, K |
+| 10 | Car | `car.mym` | U, E, J, K |
+| 11 | Cars | `cars.mym` | U, E, J, K |
+| 12 | Code Geass | `code_geass.mym` | U, E, J, K |
+| 13 | Constantine | `constantine.mym` | U, E, J, K |
+| 14 | Dark Wii Original | `dark_wii_original.mym` | U, E, J, K |
+| 15 | Dark Wii Blue | `dark_wii_blue{r}.mym` | U, E, J, K |
+| 16 | Dark Wii Green | `dark_wii_green{r}.mym` | U, E, J, K |
+| 17 | Dark Wii Orange | `dark_wii_orange{r}.mym` | U, E, J, K |
+| 18 | Dark Wii Pink | `dark_wii_pink{r}.mym` | U, E, J, K |
+| 19 | Dark Wii Purple | `dark_wii_purple{r}.mym` | U, E, J, K |
+| 20 | Dark Wii Red | `dark_wii_red{r}.mym` | U, E, J |
+| 21 | Dark Wii White | `dark_wii_white{r}.mym` | U, E, J, K |
+| 22 | Dark Wii Yellow | `dark_wii_yellow{r}.mym` | U, E, J, K |
+| 23 | Deth Klok | `deth_klok.mym` | U, E, J, K |
+| 24 | Discord | `Discord.mym` | U, E, J, K |
+| 25 | Dragon Ball Z v1 | `dragon_ball_z_v1.mym` | U, E, J, K |
+| 26 | Dragon Ball Z v2 | `dragon_ball_z_v2.mym` | U, E, J, K |
+| 27 | Dr Who | `dr_who.mym` | U, E, J, K |
+| 28 | Earth Bound | `earth_bound.mym` | U, E, J, K |
+| 29 | Evil Dead | `evil_dead.mym` | U, E, J, K |
+| 30 | Excite Bots | `excite_bots.mym` | U, E, J, K |
+| 31 | Eyes | `eyes.mym` | U, E, J, K |
+| 32 | Family Guy | `family_guy.mym` | U, E, J, K |
+| 33 | Fantasy | `fantasy.mym` | U, E, J, K |
+| 34 | Fight Club | `fight_club.mym` | U, E, J, K |
+| 35 | Final Fantasy 7 | `final_fantasy_7.mym` | U, E, J, K |
+| 36 | Futurama | `Futurama.mym` | U, E, J, K |
+| 37 | Gaara | `gaara.mym` | U, E, J, K |
+| 38 | Ghost Busters | `ghost_busters.mym` | U, E, J, K |
+| 39 | Golden Sun | `golden_sun.mym` | U, E, J, K |
+| 40 | Hand Drawn | `hand_drawn.mym` | U, E, J, K |
+| 41 | Hello Kitty | `hello_kitty.mym` | U, E, J, K |
+| 42 | Heros | `heros.mym` | U, E, J, K |
+| 43 | Jurassic Park 3 | `jurassic_park_3.mym` | U, E, J, K |
+| 44 | Kingdom Hearts | `kingdom_hearts.mym` | U, E, J, K |
+| 45 | Leopard OS | `leopard_os.mym` | U, E, J, K |
+| 46 | Lime Wii | `lime_wii.mym` | U, E, J, K |
+| 47 | Luigi | `luigi.mym` | U, E, J, K |
+| 48 | Mad World | `mad_world.mym` | U, E, J, K |
+| 49 | Majoras Mask | `majoras_mask.mym` | U, E, J, K |
+| 50 | Mario | `mario.mym` | U, E, J, K |
+| 51 | Mario Kart | `Mario_Kart.mym` | U, E, J, K |
+| 52 | Matrix | `matrix.mym` | U, E, J, K |
+| 53 | Matrix Reloaded | `matrix_reloaded.mym` | U, E, J, K |
+| 54 | Metroid | `metroid.mym` | U, E, J, K |
+| 55 | Mortal Kombat | `mortal_kombat.mym` | U, E, J, K |
+| 56 | Muse | `muse.mym` | U, E, J, K |
+| 57 | Nightmare B4 Xmas | `nightmare_b4_xmas.mym` | U, E, J, K |
+| 58 | Old School Nintendo | `old_school_nintendo.mym` | U, E, J, K |
+| 59 | Psychedelic | `psychedelic.mym` | U, E, J, K |
+| 60 | Ratchet and Clank | `ratchet_and_clank.mym` | U, E, J, K |
+| 61 | Rockband 2 | `rockband_2.mym` | U, E, J, K |
+| 62 | Shadow The Hedgehog | `shadow_the_hedgehog.mym` | U, E, J, K |
+| 63 | Spiderman | `spiderman.mym` | U, E, J, K |
+| 64 | Super Hero Squad | `super_hero_squad.mym` | U, E, J, K |
+| 65 | Super Sonic | `super_sonic.mym` | U, E, J, K |
+| 66 | The Simpsons | `the_simpsons.mym` | U, E, J, K |
+| 67 | Thunder Cats | `thunder_cats.mym` | U, E, J, K |
+| 68 | TMNT | `tmnt.mym` | U, E, J, K |
+| 69 | Tomb Raider | `tomb_raider.mym` | U, E, J, K |
+| 70 | True Blood | `true_blood.mym` | U, E, J, K |
+| 71 | Win XP OS | `win_xp_os.mym` | U, E, J, K |
+| 72 | Wolverine | `wolverine.mym` | U, E, J, K |
+| 73 | Zelda | `zelda.mym` | U, E, J, K |
+
+---
+
+## About .mym and .csm files
+
+- **`.mym`** is a theme *mod* in the MyMenuify format. It's a zip archive containing a `mym.ini` that lists which parts of the System Menu to replace, plus the replacement images and layout files. You can open and edit them in the [MYM Editor](#mym-editor).
+- **`.csm`** is a complete, ready-to-install System Menu theme. It's the System Menu content file with the mod applied, for one specific version and region. **A `.csm` only works on the version and region it was built for.**
+- **`000000XX.app`** is the original System Menu content file the theme is built from, for example `00000097.app` for 4.3U.
+
+---
+
+## Where files are stored
+
+| What | Windows | macOS | Linux |
+|---|---|---|---|
+| Settings | `%APPDATA%\WiiThemerDesktop\settings.json` | `~/Library/Application Support/WiiThemerDesktop/settings.json` | `~/.config/WiiThemerDesktop/settings.json` (or `$XDG_CONFIG_HOME`) |
+| Download cache | `...\WiiThemerDesktop\cache\` | `.../WiiThemerDesktop/cache/` | `~/.config/WiiThemerDesktop/cache/` |
+| Built themes | `%USERPROFILE%\WiiThemer\` | `~/WiiThemer/` | `~/WiiThemer/` |
+| Temporary build folders | Your system temp folder, `wiithemer_*` | same | same |
+
+The exact settings path is also printed in the first line of the log panel. To start fresh, delete the `WiiThemerDesktop` folder.
+
+---
+
+## Running and building from source
+
+You need **Python 3.10+** with **Tkinter**:
+- Windows and python.org installers include Tkinter.
+- On Homebrew: `brew install python-tk`.
+- On Debian/Ubuntu: `sudo apt install python3-tk`.
+
+```bash
+git clone https://github.com/A-Hackers-Guide/wiithemer-desktop.git
+```
+
+```bash
+cd wiithemer-desktop
+```
+
+```bash
 pip install -r requirements.txt
+```
+
+```bash
 python app/wiithemer_desktop.py
 ```
 
-## License
+Check that the app starts without opening it (this is what CI runs):
 
-GPL-2.0, the same as the original WiiThemer. The `app/tools` binaries and spin mods come from the original repository. The themes and preview images are downloaded on demand from the original project and belong to their creators. This project is not affiliated with Nintendo. Modding your console is at your own risk.
+```bash
+python app/wiithemer_desktop.py --selftest
+```
+
+Package it yourself with PyInstaller (the same arguments CI uses):
+
+```bash
+pyinstaller --noconfirm --clean --windowed --name WiiThemerDesktop --icon packaging/icon.png --add-data app/catalog.json:. --add-data app/tools:tools --add-data app/spins:spins app/wiithemer_desktop.py
+```
+
+- Windows: add `--onefile` to get one `.exe` in `dist/`.
+- macOS: you get `dist/WiiThemerDesktop.app`.
+- Linux: you get `dist/WiiThemerDesktop/`. See `.github/workflows/release.yml` for turning that into an AppImage with `appimagetool`.
+
+`packaging/make_icon.py` regenerates `packaging/icon.png`. It only uses the Python standard library.
+
+---
+
+## How releases are made
+
+All building happens on GitHub Actions (`.github/workflows/release.yml`), not on anyone's computer:
+
+1. Every push to `main` and every pull request builds all three platforms and runs `--selftest` (the Linux AppImage is also tested after packaging).
+2. Pushing a tag like `v1.2.0` does the same, then publishes a GitHub Release with the `.exe`, `.dmg`, `.app.zip` and `.AppImage` attached.
+3. The website is served by GitHub Pages from the `docs/` folder on `main`.
+
+To make a release:
+
+```bash
+git tag v1.2.0
+```
+
+```bash
+git push origin v1.2.0
+```
+
+---
+
+## Project layout
+
+```
+wiithemer-desktop/
+├── app/
+│   ├── wiithemer_desktop.py   # the whole app (GUI, builder, MYM editor)
+│   ├── catalog.json           # built-in theme list (name, file, preview, regions)
+│   ├── spins/                 # nospin / spin / fastspin / transchan .mym mods
+│   └── tools/                 # themewii.exe, SharpZipLib, ASH.exe, 7z.exe (from WiiThemer)
+├── docs/                      # GitHub Pages website (index.html, catalog.json, icon)
+├── packaging/                 # icon, icon generator, Linux .desktop file
+├── .github/workflows/         # cross-platform build and release
+├── requirements.txt
+└── LICENSE                    # GPL-2.0
+```
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| **"themewii.exe is a Windows program. Install Wine…"** | Install Wine ([how](#installing-wine-macos-and-linux)). If it's installed under another name, set **Settings → Tools → Wine command**. |
+| Wine asks to install Mono | Accept. themewii is a .NET program and needs it. |
+| A step fails right away on Windows | Make sure the .NET Framework is installed and enabled (Control Panel → Programs → Turn Windows features on or off). |
+| **Step 1 fails or hangs** (System Menu download) | themewii downloads from Nintendo's update servers, so check your internet connection. Or skip the download with **Own System Menu .app** (a NAND dump). |
+| "Build finished but … was not created" | Turn on **Keep work folder**, rebuild, and look in the folder shown in the log. Compare the file names against your pipeline. |
+| "… is not available for region K" | That theme has no file for your region (for example Dark Wii Red on K). |
+| "System Menu 4.0K is not a known version" | There's no Korean 4.0. Add your own under `extra_versions` if you know what you're doing. |
+| Previews don't show | You may be offline, or the base URL may be wrong. Previews need the Pillow library (included in the release builds). |
+| A theme fails to download | Check **Catalog → Base URL**, then try **Clear download cache**. |
+| The app looks broken after changing settings | **Settings → Reset to defaults**, or delete `settings.json`. |
+| macOS says "damaged" | Run `xattr -dr com.apple.quarantine /Applications/WiiThemerDesktop.app`. |
+| AppImage won't start | Run `chmod +x`, install `libfuse2`, or try `--appimage-extract-and-run`. |
+| The text is too small or too big | **Settings → Font size**. |
+
+When reporting a bug, include the full text of the log panel. [Open an issue](https://github.com/A-Hackers-Guide/wiithemer-desktop/issues).
+
+---
+
+## FAQ
+
+**Does this need internet?**
+The first time, yes: to download the theme, its preview, and (unless you supply one) the System Menu file. After that, cached themes build offline if you set **Own System Menu .app**.
+
+**Is it the same as wiithemer.org?**
+It runs the same tool (`themewii.exe`) with the same commands, the same versions, the same spin options and the same "spin first" rule. The differences are that it runs on your computer and that you can change everything.
+
+**Can I use themes that aren't in the list?**
+Yes. Use **Open .mym…** for a file on your computer, **Add URL…** for a link, or build your own in the **MYM Editor**.
+
+**Can I use vWii (Wii U) or Wii mini?**
+Their System Menus are different titles and aren't in the version table. Don't install these themes on them unless you know exactly what you're doing.
+
+**Why isn't the macOS app signed?**
+Signing needs a paid Apple Developer account. Follow the [macOS install steps](#macos) to open it.
+
+**Why does the app download themes instead of bundling them?**
+The theme library is about 680 MB, and the art belongs to its creators. Downloading on demand keeps the app small (about 15–30 MB) and gets the files from the original project.
+
+---
+
+## Safety: read before installing themes
+
+Installing System Menu themes changes your Wii's most important software. A bad theme, or one built for the wrong version or region, can **brick** the console. Before installing any theme:
+
+1. **Make a NAND backup** with BootMii, and keep it somewhere safe.
+2. **Install Priiloader**, so you can recover if the menu won't load.
+3. **Check that the version and region match** your Wii exactly (Wii Settings, top-right corner).
+4. Check that the `.csm` file size looks normal: several MB, roughly the size of the original System Menu file.
+
+You use this software at your own risk. The authors aren't responsible for any damage.
+
+---
+
+## Credits
+
+- **[scooby7402976](https://github.com/scooby7402976)**: WiiThemer, the `themewii` build tool, and the theme catalog this project is based on.
+- **The theme creators** of every `.mym` in the WiiThemer library.
+- **The MyMenuify and Wii homebrew communities** for the `.mym` / `.csm` formats and tooling.
+- Bundled third-party pieces from the original repo: SharpZipLib (`ICSharpCode.SharpZipLib.dll`), 7-Zip (`7z.exe`), and `ASH.exe`.
+
+## License and legal
+
+This project is licensed under the **GNU General Public License v2.0**, the same as the original WiiThemer. See [LICENSE](LICENSE).
+
+- Theme files and preview images are **not** in this repository. They're downloaded at runtime from the original project and belong to their creators. Many feature characters and artwork owned by third parties.
+- This project is **not affiliated with or endorsed by Nintendo**. "Wii" is a trademark of Nintendo.
+- No Nintendo software is included. System Menu files are downloaded by themewii from Nintendo's servers at build time, or supplied by you from your own console.
