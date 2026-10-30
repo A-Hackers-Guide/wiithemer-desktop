@@ -28,7 +28,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.1.0"
 MOD = "Command" if sys.platform == "darwin" else "Control"
 MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
@@ -178,6 +178,7 @@ DEFAULT_SETTINGS = {
         "gallery_columns": 5,
         "gallery_thumb": 150,
         "gallery_autoload": False,
+        "ui_scale": 1.0,
         "show_log": True,
         "log_height": 8,
     },
@@ -222,6 +223,9 @@ DEFAULT_SETTINGS = {
         "known_tabs": [],
         "sd_folder": "",
         "sd_subfolder": "themes",
+        "popup_when_done": True,
+        "open_folder_when_done": False,
+        "beep_when_done": False,
     },
 }
 
@@ -504,6 +508,10 @@ class App(tk.Tk):
     def apply_appearance(self):
         a = self.settings["appearance"]
         set_language(a.get("language", "English"), a.get("custom_strings"))
+        if not hasattr(self, "base_scaling"):
+            self.base_scaling = float(self.tk.call("tk", "scaling"))
+        scale = min(4.0, max(0.5, float(a.get("ui_scale", 1.0) or 1.0)))
+        self.tk.call("tk", "scaling", self.base_scaling * scale)
         self.title(a["window_title"])
         self.geometry(a["window_geometry"])
         self.configure(bg=a["bg"])
@@ -944,6 +952,7 @@ class App(tk.Tk):
                            ("select_bg", "Selection")]:
             field("appearance", key, label, r, "color"); r += 1
         field("appearance", "preview_size", "Preview width (px)", r); r += 1
+        field("appearance", "ui_scale", "Interface scale (1.0 = normal)", r); r += 1
         field("appearance", "window_title", "Window title", r); r += 1
         field("appearance", "language", "Language", r, "combo", available_languages()); r += 1
         section("Layout", r); r += 1
@@ -972,6 +981,9 @@ class App(tk.Tk):
         field("general", "check_for_updates", "Check for updates at start", r, "check"); r += 1
         field("general", "history_limit", "History entries to keep", r); r += 1
         field("general", "sd_subfolder", "Folder on SD card", r); r += 1
+        field("general", "popup_when_done", "Show a popup when builds finish", r, "check"); r += 1
+        field("general", "open_folder_when_done", "Open the output folder after building", r, "check"); r += 1
+        field("general", "beep_when_done", "Beep when builds finish", r, "check"); r += 1
 
         row = ttk.Frame(f)
         row.grid(row=r, column=0, columnspan=3, sticky="w", pady=12)
@@ -1039,7 +1051,13 @@ class App(tk.Tk):
                         msg += "\n\n" + "\n".join(built[:10]) + ("\n…" if len(built) > 10 else "")
                     if failed:
                         msg += f"\n\n{len(failed)} failed:\n" + "\n".join(failed[:10])
-                    (messagebox.showwarning if failed else messagebox.showinfo)(APP_NAME, msg)
+                    g = self.settings["general"]
+                    if g.get("beep_when_done"):
+                        self.bell()
+                    if built and g.get("open_folder_when_done"):
+                        open_path(os.path.dirname(built[-1]))
+                    if g.get("popup_when_done", True) or failed:
+                        (messagebox.showwarning if failed else messagebox.showinfo)(APP_NAME, msg)
                 elif kind == "error":
                     messagebox.showerror(APP_NAME, payload)
         except queue.Empty:
@@ -1880,6 +1898,11 @@ def selftest():
     app.zoom(1)
     app.zoom(-1)
     app.use_preset("Wii Classic")
+    app.settings["appearance"]["ui_scale"] = 1.5
+    app.rebuild()
+    assert abs(float(app.tk.call("tk", "scaling")) - app.base_scaling * 1.5) < 0.01
+    app.settings["appearance"]["ui_scale"] = 1.0
+    app.rebuild()
     assert "gallery" in app.tab_frames and app.gallery_cells
     first = next(iter(app.gallery_cells))
     if Image is not None:

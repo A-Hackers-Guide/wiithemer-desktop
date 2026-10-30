@@ -294,6 +294,7 @@ A form for the most common settings. Click **Apply** to save; the app redraws it
 - **Appearance:** widget style, font, font size, background, text, accent, text-on-accent, field and selection colors (each with a **Pick** color picker), preview width and window title.
 - **Build:** output file name template, keep work folder, and also save the System Menu `.app`.
 - **Tools:** a custom `themewii.exe`, the Wine command, use Wine on Windows, the themewii key argument, and the step timeout.
+- **Interface scale:** makes the whole app bigger or smaller (Appearance).
 - **General:** check for updates when the app starts (on by default; it asks GitHub for the latest release and offers to open the download page), and how many history entries to keep.
 - **Import… / Export…** settings as JSON, **Reset to defaults**, and **Check for updates** now.
 
@@ -355,6 +356,7 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `field_bg` | `"#2a2c36"` | Background of inputs, lists and text boxes. |
 | `select_bg` | `"#34b6e8"` | Background of selected rows. |
 | `preview_size` | `360` | Largest preview image size, in pixels. |
+| `ui_scale` | `1.0` | Scales the whole interface (0.5 to 4.0), for high-resolution screens or easier reading. |
 | `window_geometry` | `"1100x720"` | Starting window size (and position), Tk style: `WIDTHxHEIGHT+X+Y`. |
 | `window_title` | `"WiiThemer Desktop"` | Window title. |
 | `language` | `"English"` | UI language. Bundled: English, Español, Français, Deutsch, Português. |
@@ -416,6 +418,9 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `check_for_updates` | `true` | Ask GitHub for a newer release when the app starts. |
 | `history` | `[]` | Past builds: `{"when", "theme", "display", "spin", "path", "sha256", "size"}`. |
 | `history_limit` | `50` | How many history entries to keep. |
+| `popup_when_done` | `true` | Show a summary popup when builds finish. A popup always appears if something failed. |
+| `open_folder_when_done` | `false` | Open the output folder automatically after building. |
+| `beep_when_done` | `false` | Beep when builds finish. |
 | `sd_folder` | `""` | The SD card or USB drive you last copied to. |
 | `sd_subfolder` | `"themes"` | Folder on the card that **Copy to SD card…** puts files in. |
 | `known_tabs` | `[]` | Used internally so tabs added in new versions appear once after updating, even if you customized `tabs`. |
@@ -888,7 +893,12 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 
 ## Changelog
 
-### v2.0.0
+### v2.1.0
+- **Interface scale**, for high-resolution screens and accessibility.
+- Options to turn off the "done" popup, open the output folder automatically, and beep when builds finish.
+- CI: retries the macOS disk image step when the runner reports "Resource busy".
+
+### v2.0.0 (shipped as part of v2.1.0)
 - **Your own spin mods**: any `.mym` in the settings folder's `spins` folder appears in the Channel spin list.
 - **Extra catalogs**: load another `catalog.json` from a file or URL, adding to or replacing the built-in list. **Export catalog…** shares yours.
 - Catalog entries can use full URLs for theme files and previews.

@@ -128,5 +128,9 @@
  "Copy to SD card…": "Copier sur la carte SD…",
  "Folder on SD card": "Dossier sur la carte SD",
  "Export catalog…": "Exporter le catalogue…",
- "Extra catalog (file or URL)": "Catalogue en plus (fichier ou URL)"
+ "Extra catalog (file or URL)": "Catalogue en plus (fichier ou URL)",
+ "Interface scale (1.0 = normal)": "Échelle de l'interface (1.0 = normal)",
+ "Show a popup when builds finish": "Afficher une fenêtre à la fin",
+ "Open the output folder after building": "Ouvrir le dossier de sortie à la fin",
+ "Beep when builds finish": "Bip à la fin"
 }
