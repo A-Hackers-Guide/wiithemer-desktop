@@ -31,8 +31,10 @@
 5. [Installing the theme on your Wii](#installing-the-theme-on-your-wii)
 6. [The app, tab by tab](#the-app-tab-by-tab)
    - [Build Theme](#build-theme)
+   - [Batch builds](#batch-builds)
    - [MYM Editor](#mym-editor)
    - [Catalog](#catalog)
+   - [History](#history)
    - [Settings](#settings)
    - [Advanced (JSON)](#advanced-json)
    - [Log panel](#log-panel)
@@ -48,14 +50,16 @@
 10. [Built-in theme list](#built-in-theme-list)
 11. [About .mym and .csm files](#about-mym-and-csm-files)
 12. [Where files are stored](#where-files-are-stored)
-13. [Running and building from source](#running-and-building-from-source)
-14. [How releases are made](#how-releases-are-made)
-15. [Project layout](#project-layout)
-16. [Troubleshooting](#troubleshooting)
-17. [FAQ](#faq)
-18. [Safety: read before installing themes](#safety-read-before-installing-themes)
-19. [Credits](#credits)
-20. [License and legal](#license-and-legal)
+13. [Command line (CLI)](#command-line-cli)
+14. [Running and building from source](#running-and-building-from-source)
+15. [How releases are made](#how-releases-are-made)
+16. [Project layout](#project-layout)
+17. [Troubleshooting](#troubleshooting)
+18. [FAQ](#faq)
+19. [Safety: read before installing themes](#safety-read-before-installing-themes)
+20. [Credits](#credits)
+21. [License and legal](#license-and-legal)
+22. [Changelog](#changelog)
 
 ---
 
@@ -89,7 +93,12 @@ Go to the **[latest release](https://github.com/A-Hackers-Guide/wiithemer-deskto
 | Windows 10/11 (x64) | [`WiiThemerDesktop-Windows.exe`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-Windows.exe) | A single file. No installer needed. |
 | macOS (Apple Silicon) | [`WiiThemerDesktop-macOS.dmg`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-macOS.dmg) | Drag the `.app` to Applications. |
 | macOS (Apple Silicon) | [`WiiThemerDesktop-macOS.app.zip`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-macOS.app.zip) | The same `.app` as the `.dmg`, zipped. |
+| macOS (Intel) | [`WiiThemerDesktop-macOS-Intel.dmg`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-macOS-Intel.dmg) | For Intel Macs (v1.2.0 and later). |
+| macOS (Intel) | [`WiiThemerDesktop-macOS-Intel.app.zip`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-macOS-Intel.app.zip) | The same `.app` as the Intel `.dmg`, zipped. |
 | Linux (x86_64) | [`WiiThemerDesktop-Linux-x86_64.AppImage`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-Linux-x86_64.AppImage) | Works on most distros from 2022 onward (built on Ubuntu 22.04). |
+| Linux (ARM64) | [`WiiThemerDesktop-Linux-aarch64.AppImage`](https://github.com/A-Hackers-Guide/wiithemer-desktop/releases/latest/download/WiiThemerDesktop-Linux-aarch64.AppImage) | Raspberry Pi 4/5 (64-bit OS), ARM laptops (v1.2.0 and later). |
+
+**Which Mac do I have?** Apple menu → **About This Mac**. "Chip: Apple M…" means Apple Silicon. "Processor: Intel" means Intel.
 
 Website with a theme gallery: **https://a-hackers-guide.github.io/wiithemer-desktop/**
 
@@ -198,7 +207,9 @@ The app makes a `.csm` file. To install it you need a **softmodded Wii** (with t
 | Control | What it does |
 |---|---|
 | **Search box** | Filters the theme list as you type. |
-| **Theme list** | Every theme that isn't hidden. The **Source** column says where it comes from: `catalog` (built in), `local` (a file on your computer) or `url` (a link). |
+| **Favorites only** | Shows only the themes you've starred. |
+| **Theme list** | Every theme that isn't hidden. **★** marks favorites. The **Source** column says where it comes from: `catalog` (built in), `local` (a file on your computer) or `url` (a link). **Ctrl-click / Cmd-click / Shift-click** selects several themes; **Build theme** then builds all of them. |
+| **★ button** | Stars or unstars the selected themes. |
 | **Open .mym…** | Adds a `.mym` file from your computer to the list. You can also pick a preview image (PNG/JPG/GIF/AVIF/WebP), or skip it. |
 | **Add URL…** | Adds a theme by direct link to a `.mym` file, plus an optional preview image link. The file downloads when you build. |
 | **Preview** | Shows the theme's preview image. Built-in previews come from the original WiiThemer repository and are saved for later. |
@@ -208,9 +219,21 @@ The app makes a `.csm` file. To install it you need a **softmodded Wii** (with t
 | **Apply spin first** | `auto` follows WiiThemer's rule (only Black Pirate, Matrix, Matrix Reloaded and Muse apply the spin mod first). `yes` and `no` force it either way. |
 | **Save to** | The folder the finished `.csm` is copied to. |
 | **Own System Menu .app** | Optional. Point this at your own copy of your System Menu content file (for example `00000097.app` dumped from your NAND). It's then used instead of downloading. |
-| **Build theme** | Starts the build. The app stays usable while it runs. |
+| **Build theme** | Builds every selected theme for the chosen version and region. The app stays usable while it runs, and the progress bar shows how far along it is. |
+| **Batch build…** | Builds the selected themes for **several versions and regions at once**. See [Batch builds](#batch-builds). |
+| **Open output folder** | Opens the **Save to** folder in Explorer, Finder or your file manager. |
+| **Test tools** | Checks that themewii is present and that Wine runs (on macOS/Linux), and prints what it found to the log. Run it first if builds fail. |
 
 The app remembers everything you choose here for next time.
+
+### Batch builds
+
+1. Select one or more themes (Ctrl-click / Cmd-click / Shift-click).
+2. Click **Batch build…**.
+3. Tick the version/region boxes you want. **All** ticks all 15 real combinations (4.0K doesn't exist, so it isn't offered), and **None** clears them.
+4. Click **Build**.
+
+Every combination is built one after another. When it's done, a summary lists what was built and what failed. Themes that don't exist for a region (for example Dark Wii Red on K) are reported as failed and skipped. This is useful for making one theme for every Wii in the house, or for publishing a theme for all regions.
 
 ### MYM Editor
 
@@ -237,14 +260,20 @@ Click an item to view it. Text files open as editable text, and PNG/JPG/GIF file
 - **Clear download cache**: deletes saved `.mym` files and previews so they download fresh.
 - **Apply**: saves the base URL.
 
+### History
+
+Lists your last builds (50 by default; change it in Settings → General): when, version, spin, and the file path. **Show file** opens the folder containing the selected build, and **Clear history** empties the list (the files themselves aren't deleted).
+
 ### Settings
 
 A form for the most common settings. Click **Apply** to save; the app redraws itself with the changes.
 
+- **Color preset:** one click applies a whole color scheme: **Midnight** (default), **Wii Classic**, **Light**, **Dark Wii Red**, **Dark Wii Purple**, **Lime** or **High Contrast**. You can fine-tune any color afterwards.
 - **Appearance:** widget style, font, font size, background, text, accent, text-on-accent, field and selection colors (each with a **Pick** color picker), preview width and window title.
 - **Build:** output file name template, keep work folder, and also save the System Menu `.app`.
 - **Tools:** a custom `themewii.exe`, the Wine command, use Wine on Windows, the themewii key argument, and the step timeout.
-- **Import… / Export…** settings as JSON, and **Reset to defaults**.
+- **General:** check for updates when the app starts (on by default; it asks GitHub for the latest release and offers to open the download page), and how many history entries to keep.
+- **Import… / Export…** settings as JSON, **Reset to defaults**, and **Check for updates** now.
 
 ### Advanced (JSON)
 
@@ -318,6 +347,15 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `preview_path` | `"previewpics/"` | Folder of preview images inside the base URL. |
 | `custom_themes` | `[]` | Themes you added: `{"name", "file", "preview", "source": "local" \| "url"}`. |
 | `hidden_themes` | `[]` | Names of themes hidden from the Build list. |
+| `favorites` | `[]` | Names of starred themes. |
+
+#### `general`
+
+| Key | Default | Description |
+|---|---|---|
+| `check_for_updates` | `true` | Ask GitHub for a newer release when the app starts. |
+| `history` | `[]` | Past builds: `{"when", "theme", "display", "spin", "path"}`. |
+| `history_limit` | `50` | How many history entries to keep. |
 
 ### Output file name template
 
@@ -551,6 +589,52 @@ The exact settings path is also printed in the first line of the log panel. To s
 
 ---
 
+## Command line (CLI)
+
+Everything the Build tab does also works without the window, which is good for scripts and batch jobs. It uses your saved settings (pipeline, Wine command, catalog and so on) unless you pass `--settings`.
+
+```
+WiiThemerDesktop --cli [--list] [--theme NAME|PATH|URL ...] [--version V ...] [--region R ...]
+                       [--all-versions] [--spin SPIN] [--out DIR] [--base-app FILE] [--settings FILE]
+```
+
+| Option | Meaning |
+|---|---|
+| `--list` | Prints every built-in theme and its regions. |
+| `--theme` | A built-in theme name (not case-sensitive), a path to a `.mym`, or a URL. Repeat it for more themes. |
+| `--version` / `--region` | Repeat these for more; every combination is built. Without them, your last-used version and region are used. |
+| `--all-versions` | Builds all 15 real version/region combinations. |
+| `--spin` | `nospin`, `spin`, `fastspin`, `transchan`, or a path to a `.mym`. |
+| `--out` | Output folder. |
+| `--base-app` | Your own System Menu `.app`. |
+| `--settings` | Use this settings JSON (for example one you exported). |
+
+The exit code is `0` when everything built and `1` if anything failed.
+
+Examples:
+
+macOS (the program inside the `.app`):
+
+```bash
+/Applications/WiiThemerDesktop.app/Contents/MacOS/WiiThemerDesktop --cli --list
+```
+
+Linux:
+
+```bash
+./WiiThemerDesktop-Linux-x86_64.AppImage --cli --theme "Black Pirate" --version 4.3 --region U --region E
+```
+
+From source (any platform):
+
+```bash
+python app/wiithemer_desktop.py --cli --theme "Dark Wii Blue" --all-versions --spin fastspin --out ./themes
+```
+
+On Windows, the `.exe` is a windowed app, so it can't print to the console. Use `start /wait WiiThemerDesktop-Windows.exe --cli ...` and check the output folder, or run from source to see the log.
+
+---
+
 ## Running and building from source
 
 You need **Python 3.10+** with **Tkinter**:
@@ -598,7 +682,12 @@ pyinstaller --noconfirm --clean --windowed --name WiiThemerDesktop --icon packag
 
 All building happens on GitHub Actions (`.github/workflows/release.yml`), not on anyone's computer:
 
-1. Every push to `main` and every pull request builds all three platforms and runs `--selftest` (the Linux AppImage is also tested after packaging).
+1. Every push to `main` and every pull request builds every target and runs `--selftest` and `--cli --list` (the Linux AppImages are also tested after packaging). README and website-only changes skip the builds.
+   - Windows x64
+   - macOS Apple Silicon and Intel
+   - Linux x86_64 and ARM64
+
+   `--selftest` opens every tab, selects and previews a theme, toggles favorites, applies all color presets, uses the MYM editor and history, and resets settings, all against a temporary settings file.
 2. Pushing a tag like `v1.2.0` does the same, then publishes a GitHub Release with the `.exe`, `.dmg`, `.app.zip` and `.AppImage` attached.
 3. The website is served by GitHub Pages from the `docs/` folder on `main`.
 
@@ -703,3 +792,24 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 - Theme files and preview images are **not** in this repository. They're downloaded at runtime from the original project and belong to their creators. Many feature characters and artwork owned by third parties.
 - This project is **not affiliated with or endorsed by Nintendo**. "Wii" is a trademark of Nintendo.
 - No Nintendo software is included. System Menu files are downloaded by themewii from Nintendo's servers at build time, or supplied by you from your own console.
+
+---
+
+## Changelog
+
+### v1.2.0
+- New downloads: **macOS Intel** (`-Intel.dmg` / `-Intel.app.zip`) and **Linux ARM64** (`-aarch64.AppImage`).
+
+### v1.1.0
+- **Color presets**: Midnight, Wii Classic, Light, Dark Wii Red, Dark Wii Purple, Lime, High Contrast.
+- **Favorites** (★) and a "Favorites only" filter.
+- **Select several themes** and build them all at once.
+- **Batch build** across any versions and regions, with a progress bar and a summary.
+- **History** tab of past builds.
+- **Open output folder** and **Test tools** buttons.
+- **Update check** at startup (can be turned off) and on demand.
+- **Command line mode** (`--cli`).
+- A much broader self-test in CI, and updated GitHub Actions.
+
+### v1.0.0
+- First release: a cross-platform port of WiiThemer 1.0, with the Build Theme, MYM Editor, Catalog, Settings and Advanced (JSON) tabs.

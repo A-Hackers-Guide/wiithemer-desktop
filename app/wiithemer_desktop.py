@@ -26,7 +26,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.2.0"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
 
 # Color presets for Settings > Appearance.
