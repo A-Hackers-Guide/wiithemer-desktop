@@ -28,7 +28,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.9.0"
+APP_VERSION = "2.0.0"
 MOD = "Command" if sys.platform == "darwin" else "Control"
 MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
@@ -207,6 +207,8 @@ DEFAULT_SETTINGS = {
         "base_url": "https://raw.githubusercontent.com/scooby7402976/wiithemer/1.0/",
         "mym_path": "mym/",
         "preview_path": "previewpics/",
+        "catalog_source": "",
+        "catalog_mode": "add",
         "custom_themes": [],
         "hidden_themes": [],
         "favorites": [],
@@ -249,9 +251,58 @@ def save_settings(settings):
         json.dump(settings, f, indent=2)
 
 
-def load_catalog():
+def load_catalog(settings=None, log=None):
+    """The built-in theme list, optionally replaced or extended by catalog_source
+    (a catalog.json file path or URL in the same format)."""
     with open(os.path.join(resource_dir(), "catalog.json"), "r", encoding="utf-8") as f:
-        return json.load(f)
+        themes = json.load(f)
+    c = (settings or {}).get("catalog", {})
+    src = c.get("catalog_source", "")
+    if not src:
+        return themes
+    try:
+        if "://" in src:
+            name = hashlib.sha1(src.encode()).hexdigest()[:12] + ".json"
+            src = download(src, os.path.join(CACHE_DIR, "catalogs", name), log)
+        with open(src, "r", encoding="utf-8") as f:
+            extra = [t for t in json.load(f) if isinstance(t, dict) and t.get("name") and t.get("file")]
+        for t in extra:
+            t.setdefault("preview", None)
+            t.setdefault("regions", ["U", "E", "J", "K"])
+        if c.get("catalog_mode") == "replace":
+            return extra
+        names = {t["name"] for t in extra}
+        return [t for t in themes if t["name"] not in names] + extra
+    except Exception as e:
+        if log:
+            log(f"Could not load catalog {c.get('catalog_source')}: {e} - using the built-in list")
+        return themes
+
+
+BUILTIN_SPINS = ["nospin", "spin", "fastspin", "transchan"]
+
+
+def user_spin_dir():
+    return os.path.join(config_dir(), "spins")
+
+
+def available_spins():
+    """Built-in spin mods plus any .mym in the user's spins folder."""
+    names = list(BUILTIN_SPINS)
+    d = user_spin_dir()
+    if os.path.isdir(d):
+        names += sorted(os.path.splitext(f)[0] for f in os.listdir(d)
+                        if f.lower().endswith(".mym") and os.path.splitext(f)[0] not in names)
+    return names
+
+
+def spin_path(spin):
+    if os.path.isfile(spin):
+        return spin
+    user = os.path.join(user_spin_dir(), spin + ".mym")
+    if os.path.isfile(user):
+        return user
+    return os.path.join(resource_dir(), "spins", spin + ".mym")
 
 
 def download(url, dest, log=None):
@@ -358,7 +409,7 @@ class Builder:
         theme_name = os.path.basename(theme_file)
         shutil.copy2(theme_file, os.path.join(work, theme_name))
         spin_name = spin + ".mym"
-        spin_src = spin if os.path.isfile(spin) else os.path.join(resource_dir(), "spins", spin_name)
+        spin_src = spin_path(spin)
         spin_name = os.path.basename(spin_src)
         shutil.copy2(spin_src, os.path.join(work, spin_name))
 
@@ -425,7 +476,7 @@ class App(tk.Tk):
         super().__init__()
         self.settings = load_settings()
         self.add_new_tabs()
-        self.catalog = load_catalog()
+        self.catalog = load_catalog(self.settings, self.log)
         self.msgs = queue.Queue()
         self.preview_img = None
         self.mym = None  # MYM editor state: {"path", "entries": {name: bytes}}
@@ -764,7 +815,7 @@ class App(tk.Tk):
         grid = [
             ("System Menu version", self.v_version, ["4.3", "4.2", "4.1", "4.0"]),
             ("Region", self.v_region, ["U", "E", "J", "K"]),
-            ("Channel spin", self.v_spin, ["nospin", "spin", "fastspin", "transchan"]),
+            ("Channel spin", self.v_spin, available_spins()),
             ("Apply spin first", self.v_runfirst, ["auto", "yes", "no"]),
         ]
         for r, (label, var, values) in enumerate(grid):
@@ -841,6 +892,16 @@ class App(tk.Tk):
         ttk.Button(row, text="Show/hide selected", command=self.toggle_hidden).pack(side="left")
         ttk.Button(row, text="Remove custom theme", command=self.remove_custom).pack(side="left", padx=4)
         ttk.Button(row, text="Clear download cache", command=self.clear_cache).pack(side="left")
+        ttk.Button(row, text="Export catalog…", command=self.export_catalog).pack(side="left", padx=4)
+        src = ttk.Frame(f)
+        src.pack(fill="x", pady=(8, 0))
+        ttk.Label(src, text="Extra catalog (file or URL)").pack(side="left")
+        self.v_cat_src = tk.StringVar(value=c["catalog_source"])
+        ttk.Entry(src, textvariable=self.v_cat_src, width=50).pack(side="left", padx=6)
+        ttk.Button(src, text="…", width=3, command=lambda: self.pick_file(self.v_cat_src)).pack(side="left")
+        self.v_cat_mode = tk.StringVar(value=c["catalog_mode"])
+        ttk.Combobox(src, textvariable=self.v_cat_mode, values=["add", "replace"], width=8,
+                     state="readonly").pack(side="left", padx=6)
         ttk.Button(row, text="Apply", style="Accent.TButton", command=self.apply_catalog).pack(side="right")
         return f
 
@@ -1219,7 +1280,7 @@ class App(tk.Tk):
     def preview_file(self, t):
         """Local path of a theme's preview image, downloading it if needed."""
         p = t["preview"]
-        if t["source"] == "catalog":
+        if t["source"] == "catalog" and "://" not in p:
             c = self.settings["catalog"]
             return download(c["base_url"] + c["preview_path"] + p, os.path.join(CACHE_DIR, "previews", p))
         if "://" in p:
@@ -1543,10 +1604,26 @@ class App(tk.Tk):
         self.log("Download cache cleared")
 
     def apply_catalog(self):
+        c = self.settings["catalog"]
         url = self.v_base_url.get().strip()
-        self.settings["catalog"]["base_url"] = url if url.endswith("/") else url + "/"
+        c["base_url"] = url if url.endswith("/") else url + "/"
+        c["catalog_source"] = self.v_cat_src.get().strip()
+        c["catalog_mode"] = self.v_cat_mode.get()
         self.persist()
-        self.log("Catalog settings saved")
+        self.catalog = load_catalog(self.settings, self.log)
+        self.log(f"Catalog settings saved - {len(self.catalog)} catalog themes")
+        self.rebuild()
+
+    def export_catalog(self):
+        """Write every theme (catalog + your own) as a catalog.json others can load."""
+        p = filedialog.asksaveasfilename(defaultextension=".json", initialfile="catalog.json")
+        if not p:
+            return
+        out = [{k: t.get(k) for k in ("name", "file", "preview", "regions") if t.get(k) is not None}
+               for t in self.all_themes()]
+        with open(p, "w", encoding="utf-8") as f:
+            json.dump(out, f, indent=1, ensure_ascii=False)
+        self.log(f"Exported {len(out)} themes to {p}")
 
     # ---------- settings ----------
     def apply_settings(self):
@@ -1714,7 +1791,7 @@ def cli(argv):
     if a.settings:
         with open(a.settings, "r", encoding="utf-8") as f:
             settings = deep_merge(DEFAULT_SETTINGS, json.load(f))
-    catalog = load_catalog()
+    catalog = load_catalog(settings, print)
     if a.list:
         for t in catalog:
             print(f"{t['name']:28} {','.join(t['regions'])}")
@@ -1812,6 +1889,15 @@ def selftest():
         assert first in app.gallery_imgs
     app.gallery_pick(first)
     assert app.theme_tree.selection() == (first,)
+    extra = os.path.join(folder, "extra_catalog.json")
+    with open(extra, "w", encoding="utf-8") as f:
+        json.dump([{"name": "Extra Theme", "file": "extra.mym"}], f)
+    app.settings["catalog"].update(catalog_source=extra, catalog_mode="add")
+    assert len(load_catalog(app.settings)) == len(load_catalog()) + 1
+    app.settings["catalog"]["catalog_mode"] = "replace"
+    assert [t["name"] for t in load_catalog(app.settings)] == ["Extra Theme"]
+    app.settings["catalog"].update(catalog_source="", catalog_mode="add")
+    assert available_spins()[:4] == BUILTIN_SPINS and os.path.isfile(spin_path("fastspin"))
     app.on_theme_select()
     app.note_box.insert("1.0", "zzuniquenote")
     app.save_note()

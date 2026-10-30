@@ -276,7 +276,9 @@ Click an item to view it. Text files open as editable text, and PNG/JPG/GIF file
 - **Show/hide selected**: hides themes you don't want in the Build list (you can select several).
 - **Remove custom theme**: deletes a local or URL theme you added. Built-in themes can be hidden but not removed.
 - **Clear download cache**: deletes saved `.mym` files and previews so they download fresh.
-- **Apply**: saves the base URL.
+- **Export catalog…**: saves every theme you can see (built-in plus the ones you added) as a `catalog.json` that others can load.
+- **Extra catalog (file or URL)**: loads another `catalog.json`, from a file on your computer or a link (for example a friend's export or a fork's list). In `add` mode its themes join the built-in list, and same-named entries are replaced. In `replace` mode it becomes the whole list. Entries can use full URLs for `file` and `preview`.
+- **Apply**: saves the base URL and extra catalog, then reloads the list.
 
 ### History
 
@@ -399,6 +401,8 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `base_url` | WiiThemer 1.0 raw URL | Root of the theme library. Must end with `/`. |
 | `mym_path` | `"mym/"` | Folder of `.mym` files inside the base URL. |
 | `preview_path` | `"previewpics/"` | Folder of preview images inside the base URL. |
+| `catalog_source` | `""` | An extra `catalog.json` (file path or URL) to load. |
+| `catalog_mode` | `"add"` | `add` merges it into the built-in list; `replace` uses only it. |
 | `custom_themes` | `[]` | Themes you added: `{"name", "file", "preview", "source": "local" \| "url"}`. |
 | `hidden_themes` | `[]` | Names of themes hidden from the Build list. |
 | `favorites` | `[]` | Names of starred themes. |
@@ -560,7 +564,8 @@ These are small `.mym` mods, bundled in `app/spins/`, that change how the channe
 | `spin` | Channels spin. |
 | `fastspin` | Channels spin faster. |
 | `transchan` | The transparent-channel mod. |
-| *path to a `.mym`* | Your own mod used in the spin step. Set `build.spin` to its full path in the Advanced tab. |
+| *your own spin mods* | Put any `.mym` in a `spins` folder inside the settings folder (**Help → Open settings folder**, then make a `spins` folder). It appears in the **Channel spin** list by its file name. |
+| *path to a `.mym`* | Or set `build.spin` to a full file path in the Advanced tab. |
 
 ---
 
@@ -824,7 +829,7 @@ wiithemer-desktop/
 | AppImage won't start | Run `chmod +x`, install `libfuse2`, or try `--appimage-extract-and-run`. |
 | The text is too small or too big | **Settings → Font size**. |
 
-When reporting a bug, include the full text of the log panel. [Open an issue](https://github.com/A-Hackers-Guide/wiithemer-desktop/issues).
+When reporting a bug, use the bug report form and include the full text of the log panel. Want to help with translations, themes or code? See [CONTRIBUTING.md](CONTRIBUTING.md). [Open an issue](https://github.com/A-Hackers-Guide/wiithemer-desktop/issues).
 
 ---
 
@@ -882,6 +887,12 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ---
 
 ## Changelog
+
+### v2.0.0
+- **Your own spin mods**: any `.mym` in the settings folder's `spins` folder appears in the Channel spin list.
+- **Extra catalogs**: load another `catalog.json` from a file or URL, adding to or replacing the built-in list. **Export catalog…** shares yours.
+- Catalog entries can use full URLs for theme files and previews.
+- A CONTRIBUTING guide (translations, themes, code) and issue forms for bugs and feature requests.
 
 ### v1.9.0
 - **Copy to SD card…** on the History tab copies builds to your SD card's `themes` folder and checks each copy against its SHA-256.
