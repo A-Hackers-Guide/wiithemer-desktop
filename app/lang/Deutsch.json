@@ -110,5 +110,11 @@
  "Preview URL": "Vorschau-URL",
  "Language": "Sprache",
  "Custom text": "Eigene Texte",
- "(install Pillow for previews)": "(Pillow installieren für Vorschauen)"
+ "(install Pillow for previews)": "(Pillow installieren für Vorschauen)",
+ "Gallery": "Galerie",
+ "Load previews": "Vorschauen laden",
+ "Click a theme to pick it for building.": "Klicke auf ein Theme, um es auszuwählen.",
+ "Gallery columns": "Galerie-Spalten",
+ "Gallery thumbnail size (px)": "Vorschaubildgröße (px)",
+ "Load gallery previews automatically": "Vorschauen automatisch laden"
 }

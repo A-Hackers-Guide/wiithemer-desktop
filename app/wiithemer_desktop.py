@@ -27,7 +27,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.6.0"
+APP_VERSION = "1.7.0"
 MOD = "Command" if sys.platform == "darwin" else "Control"
 MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
@@ -173,7 +173,10 @@ DEFAULT_SETTINGS = {
         "window_title": APP_NAME,
         "language": "English",
         "custom_strings": {},
-        "tabs": ["build", "mym", "catalog", "history", "settings", "advanced"],
+        "tabs": ["build", "gallery", "mym", "catalog", "history", "settings", "advanced"],
+        "gallery_columns": 5,
+        "gallery_thumb": 150,
+        "gallery_autoload": False,
         "show_log": True,
         "log_height": 8,
     },
@@ -211,6 +214,7 @@ DEFAULT_SETTINGS = {
         "check_for_updates": True,
         "history": [],
         "history_limit": 50,
+        "known_tabs": [],
     },
 }
 
@@ -415,6 +419,7 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.settings = load_settings()
+        self.add_new_tabs()
         self.catalog = load_catalog()
         self.msgs = queue.Queue()
         self.preview_img = None
@@ -487,7 +492,8 @@ class App(tk.Tk):
         a = self.settings["appearance"]
         # Every tab is built (other code relies on their widgets); the layout setting
         # decides which are shown and in what order. Build and Advanced always show.
-        tabs = {"build": (self.build_tab, "Build Theme"), "mym": (self.mym_tab, "MYM Editor"),
+        tabs = {"build": (self.build_tab, "Build Theme"), "gallery": (self.gallery_tab, "Gallery"),
+                "mym": (self.mym_tab, "MYM Editor"),
                 "catalog": (self.catalog_tab, "Catalog"), "history": (self.history_tab, "History"),
                 "settings": (self.settings_tab, "Settings"), "advanced": (self.raw_tab, "Advanced (JSON)")}
         order = [t for t in a.get("tabs", []) if t in tabs]
@@ -857,8 +863,11 @@ class App(tk.Tk):
         field("appearance", "window_title", "Window title", r); r += 1
         field("appearance", "language", "Language", r, "combo", available_languages()); r += 1
         section("Layout", r); r += 1
+        field("appearance", "gallery_columns", "Gallery columns", r); r += 1
+        field("appearance", "gallery_thumb", "Gallery thumbnail size (px)", r); r += 1
+        field("appearance", "gallery_autoload", "Load gallery previews automatically", r, "check"); r += 1
         field("appearance", "tabs", "Tabs (order, comma-separated)", r); r += 1
-        ttk.Label(f, text="  names: build, mym, catalog, history, settings, advanced - leave one out to hide it"
+        ttk.Label(f, text="  names: build, gallery, mym, catalog, history, settings, advanced - leave one out to hide it"
                   ).grid(row=r, column=0, columnspan=3, sticky="w"); r += 1
         field("appearance", "show_log", "Show log panel", r, "check"); r += 1
         field("appearance", "log_height", "Log height (lines)", r); r += 1
@@ -924,6 +933,8 @@ class App(tk.Tk):
                     self.log_box.see("end")
                 elif kind == "preview":
                     self.show_preview(payload)
+                elif kind == "thumb":
+                    self.show_thumb(*payload)
                 elif kind == "inspect":
                     self.mym_open(payload)
                     if str(self.tab_frames["mym"]) in self.nb.tabs():
@@ -975,6 +986,105 @@ class App(tk.Tk):
             var.set(c)
 
     # ---------- themes ----------
+    NEW_TABS = ("gallery",)
+
+    def add_new_tabs(self):
+        """Show tabs added in newer versions once, even if saved settings list older tabs."""
+        a, g = self.settings["appearance"], self.settings["general"]
+        for tab in self.NEW_TABS:
+            if tab not in g["known_tabs"]:
+                if tab not in a["tabs"]:
+                    a["tabs"].insert(min(1, len(a["tabs"])), tab)
+                g["known_tabs"].append(tab)
+
+    # ---------- gallery ----------
+    def gallery_tab(self, parent):
+        a = self.settings["appearance"]
+        f = ttk.Frame(parent, padding=10)
+        top = ttk.Frame(f)
+        top.pack(fill="x")
+        ttk.Label(top, text="Gallery", style="Header.TLabel").pack(side="left")
+        ttk.Button(top, text="Load previews", command=self.gallery_load).pack(side="right")
+        ttk.Label(top, text="Click a theme to pick it for building.").pack(side="left", padx=12)
+        canvas = tk.Canvas(f, bg=a["bg"], highlightthickness=0)
+        sb = ttk.Scrollbar(f, orient="vertical", command=canvas.yview)
+        inner = ttk.Frame(canvas)
+        inner.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=inner, anchor="nw")
+        canvas.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
+        canvas.pack(fill="both", expand=True, pady=6)
+
+        def wheel(e):
+            delta = -1 if (e.num == 4 or e.delta > 0) else 1
+            canvas.yview_scroll(delta * (1 if abs(e.delta) < 120 else abs(e.delta) // 120), "units")
+        for w in (canvas, inner):
+            w.bind("<Enter>", lambda e: [canvas.bind_all(s, wheel) for s in ("<MouseWheel>", "<Button-4>", "<Button-5>")])
+            w.bind("<Leave>", lambda e: [canvas.unbind_all(s) for s in ("<MouseWheel>", "<Button-4>", "<Button-5>")])
+
+        self.gallery_cells, self.gallery_imgs = {}, {}
+        cols, size = max(1, int(a["gallery_columns"])), int(a["gallery_thumb"])
+        hidden = set(self.settings["catalog"]["hidden_themes"])
+        themes = [t for t in self.all_themes() if t["name"] not in hidden]
+        for i, t in enumerate(themes):
+            cell = ttk.Frame(inner, padding=6)
+            cell.grid(row=i // cols, column=i % cols, sticky="n")
+            pic = ttk.Label(cell, text="◻", anchor="center")
+            pic.pack()
+            name = ttk.Label(cell, text=t["name"], wraplength=size, justify="center")
+            name.pack()
+            for w in (cell, pic, name):
+                w.bind("<Button-1>", lambda e, n=t["name"]: self.gallery_pick(n))
+            self.gallery_cells[t["name"]] = pic
+        self.gallery_loaded = False
+        parent.bind("<<NotebookTabChanged>>", self.gallery_tab_changed, add="+")
+        return f
+
+    def gallery_tab_changed(self, event=None):
+        try:
+            on_gallery = self.nb.select() == str(self.tab_frames["gallery"])
+        except (tk.TclError, AttributeError, KeyError):
+            return
+        if on_gallery and self.settings["appearance"]["gallery_autoload"] and not self.gallery_loaded:
+            self.gallery_load()
+
+    def gallery_load(self):
+        if getattr(self, "gallery_loaded", False):
+            return
+        self.gallery_loaded = True
+        themes = [t for t in self.all_themes() if t.get("preview") and t["name"] in self.gallery_cells]
+
+        def work():
+            # One at a time, so the network and CPU stay calm.
+            for t in themes:
+                try:
+                    self.msgs.put(("thumb", (t["name"], self.preview_file(t))))
+                except Exception as e:
+                    self.log(f"Preview for {t['name']} unavailable: {e}")
+        threading.Thread(target=work, daemon=True).start()
+
+    def show_thumb(self, name, path):
+        pic = self.gallery_cells.get(name)
+        if pic is None or Image is None:
+            return
+        try:
+            img = Image.open(path)
+            size = int(self.settings["appearance"]["gallery_thumb"])
+            img.thumbnail((size, size))
+            self.gallery_imgs[name] = ImageTk.PhotoImage(img)
+            pic.configure(image=self.gallery_imgs[name], text="")
+        except Exception:
+            pass
+
+    def gallery_pick(self, name):
+        self.search.set("")
+        self.fav_only.set(False)
+        self.refresh_theme_list()
+        if self.theme_tree.exists(name):
+            self.theme_tree.selection_set(name)
+            self.theme_tree.see(name)
+        self.nb.select(self.tab_frames["build"])
+
     def all_themes(self):
         themes = [dict(t, source="catalog") for t in self.catalog]
         return themes + [dict(t, source=t.get("source", "custom"))
@@ -1027,14 +1137,20 @@ class App(tk.Tk):
         if t.get("preview"):
             threading.Thread(target=self.fetch_preview, args=(t,), daemon=True).start()
 
+    def preview_file(self, t):
+        """Local path of a theme's preview image, downloading it if needed."""
+        p = t["preview"]
+        if t["source"] == "catalog":
+            c = self.settings["catalog"]
+            return download(c["base_url"] + c["preview_path"] + p, os.path.join(CACHE_DIR, "previews", p))
+        if "://" in p:
+            name = hashlib.sha1(p.encode()).hexdigest()[:12] + "_" + os.path.basename(p.split("?")[0])
+            return download(p, os.path.join(CACHE_DIR, "url-previews", name))
+        return p
+
     def fetch_preview(self, t):
         try:
-            p = t["preview"]
-            if t["source"] == "catalog":
-                c = self.settings["catalog"]
-                url = c["base_url"] + c["preview_path"] + p
-                p = download(url, os.path.join(CACHE_DIR, "previews", t["preview"]))
-            self.msgs.put(("preview", p))
+            self.msgs.put(("preview", self.preview_file(t)))
         except Exception as e:
             self.log(f"Preview unavailable: {e}")
 
@@ -1568,6 +1684,15 @@ def selftest():
     app.zoom(1)
     app.zoom(-1)
     app.use_preset("Wii Classic")
+    assert "gallery" in app.tab_frames and app.gallery_cells
+    first = next(iter(app.gallery_cells))
+    if Image is not None:
+        thumb = os.path.join(folder, "thumb.png")
+        Image.new("RGB", (300, 200), "#34b6e8").save(thumb)
+        app.show_thumb(first, thumb)
+        assert first in app.gallery_imgs
+    app.gallery_pick(first)
+    assert app.theme_tree.selection() == (first,)
     for lang in available_languages():
         app.settings["appearance"]["language"] = lang
         app.rebuild()

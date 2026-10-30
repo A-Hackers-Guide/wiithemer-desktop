@@ -115,5 +115,11 @@
  "Preview URL": "URL de la vista previa",
  "Language": "Idioma",
  "Custom text": "Texto personalizado",
- "(install Pillow for previews)": "(instala Pillow para ver vistas previas)"
+ "(install Pillow for previews)": "(instala Pillow para ver vistas previas)",
+ "Gallery": "Galería",
+ "Load previews": "Cargar vistas previas",
+ "Click a theme to pick it for building.": "Haz clic en un tema para elegirlo.",
+ "Gallery columns": "Columnas de la galería",
+ "Gallery thumbnail size (px)": "Tamaño de miniaturas (px)",
+ "Load gallery previews automatically": "Cargar vistas previas automáticamente"
 }

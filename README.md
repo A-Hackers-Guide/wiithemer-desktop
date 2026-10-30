@@ -31,6 +31,7 @@
 5. [Installing the theme on your Wii](#installing-the-theme-on-your-wii)
 6. [The app, tab by tab](#the-app-tab-by-tab)
    - [Build Theme](#build-theme)
+   - [Gallery](#gallery)
    - [Batch builds](#batch-builds)
    - [MYM Editor](#mym-editor)
    - [Catalog](#catalog)
@@ -231,6 +232,15 @@ The app makes a `.csm` file. To install it you need a **softmodded Wii** (with t
 
 The app remembers everything you choose here for next time.
 
+### Gallery
+
+The whole theme list as a grid of thumbnails.
+
+- Click **Load previews** to fetch the pictures. They download one at a time, about 4 MB in total for the built-in themes, and are saved for later.
+- **Click any theme** to select it on the Build Theme tab.
+- Hidden themes aren't shown, and themes you added appear with their own previews (a local file or a URL).
+- In **Settings → Layout** you can set the number of columns and the thumbnail size, and turn on **Load gallery previews automatically** so the previews load whenever you open the tab (off by default, to save bandwidth).
+
 ### Batch builds
 
 1. Select one or more themes (Ctrl-click / Cmd-click / Shift-click).
@@ -344,8 +354,11 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `window_title` | `"WiiThemer Desktop"` | Window title. |
 | `language` | `"English"` | UI language. Bundled: English, Español, Français, Deutsch, Português. |
 | `custom_strings` | `{}` | Your own wording for any label, button, tab or menu item: `{"Build Theme": "Make it!"}`. |
-| `tabs` | `["build", "mym", "catalog", "history", "settings", "advanced"]` | Which tabs are shown, in order. `build` and `advanced` are always added back if you leave them out. |
+| `tabs` | `["build", "gallery", "mym", "catalog", "history", "settings", "advanced"]` | Which tabs are shown, in order. `build` and `advanced` are always added back if you leave them out. |
 | `show_log` | `true` | Show the log panel at the bottom. |
+| `gallery_columns` | `5` | Number of thumbnails per row in the Gallery. |
+| `gallery_thumb` | `150` | Gallery thumbnail size, in pixels. |
+| `gallery_autoload` | `false` | Load the Gallery previews as soon as the tab opens. |
 | `log_height` | `8` | Height of the log panel, in lines. |
 
 #### `build`
@@ -394,6 +407,7 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `check_for_updates` | `true` | Ask GitHub for a newer release when the app starts. |
 | `history` | `[]` | Past builds: `{"when", "theme", "display", "spin", "path", "sha256", "size"}`. |
 | `history_limit` | `50` | How many history entries to keep. |
+| `known_tabs` | `[]` | Used internally so tabs added in new versions appear once after updating, even if you customized `tabs`. |
 
 ### Output file name template
 
@@ -861,6 +875,12 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ---
 
 ## Changelog
+
+### v1.7.0
+- A **Gallery tab**: a thumbnail grid of every theme. Click one to pick it. Previews load one at a time and only when you ask, unless you turn on auto-loading.
+- Gallery columns, thumbnail size and auto-load settings.
+- New tabs now appear after updating, even if you customized your tab layout.
+- Fix: previews for themes added by URL now download correctly.
 
 ### v1.6.0
 - **Languages**: Español, Français, Deutsch and Português, plus your own packs in the settings folder.
