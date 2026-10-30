@@ -196,7 +196,7 @@ The first time you build a given version and region, themewii downloads the matc
 
 The app makes a `.csm` file. To install it you need a **softmodded Wii** (with the Homebrew Channel) and a theme installer such as **csm-installer** or **MyMenuify**. In short:
 
-1. Copy the `.csm` file to the `themes` folder on your SD card or USB drive. Check your installer's instructions for the exact folder.
+1. Copy the `.csm` file to the `themes` folder on your SD card or USB drive. The easiest way is **History → select the build → Copy to SD card…**, which also checks the copy. Check your installer's instructions for the exact folder it expects.
 2. Open the installer from the Homebrew Channel, choose the theme, and install it.
 
 **Before you do this, read [Safety](#safety-read-before-installing-themes).** Installing a theme built for the wrong version or region can brick a Wii that doesn't have protection.
@@ -280,7 +280,7 @@ Click an item to view it. Text files open as editable text, and PNG/JPG/GIF file
 
 ### History
 
-Lists your last builds (50 by default; change it in Settings → General): when, version, spin, and the file path. **Show file** opens the folder containing the selected build. **Copy SHA-256** copies the checksum of the selected build(s), so you can check a file you copied to an SD card or shared with someone. **Clear history** empties the list (the files themselves aren't deleted).
+Lists your last builds (50 by default; change it in Settings → General): when, version, spin, and the file path. **Show file** opens the folder containing the selected build. **Copy SHA-256** copies the checksum of the selected build(s), so you can check a file you copied to an SD card or shared with someone. **Copy to SD card…** asks for your SD card or USB drive. It copies the selected builds into its `themes` folder (change it in Settings → General → Folder on SD card), creating the folder if needed, and checks that each copy's SHA-256 matches the original. The app remembers the drive for next time. **Clear history** empties the list (the files themselves aren't deleted).
 
 ### Settings
 
@@ -412,6 +412,8 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `check_for_updates` | `true` | Ask GitHub for a newer release when the app starts. |
 | `history` | `[]` | Past builds: `{"when", "theme", "display", "spin", "path", "sha256", "size"}`. |
 | `history_limit` | `50` | How many history entries to keep. |
+| `sd_folder` | `""` | The SD card or USB drive you last copied to. |
+| `sd_subfolder` | `"themes"` | Folder on the card that **Copy to SD card…** puts files in. |
 | `known_tabs` | `[]` | Used internally so tabs added in new versions appear once after updating, even if you customized `tabs`. |
 
 ### Output file name template
@@ -880,6 +882,9 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ---
 
 ## Changelog
+
+### v1.9.0
+- **Copy to SD card…** on the History tab copies builds to your SD card's `themes` folder and checks each copy against its SHA-256.
 
 ### v1.8.0
 - **Sorting**: A to Z, Z to A, favorites first, recently built, most built, or by source.

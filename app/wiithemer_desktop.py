@@ -28,7 +28,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.8.0"
+APP_VERSION = "1.9.0"
 MOD = "Command" if sys.platform == "darwin" else "Control"
 MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
@@ -218,6 +218,8 @@ DEFAULT_SETTINGS = {
         "history": [],
         "history_limit": 50,
         "known_tabs": [],
+        "sd_folder": "",
+        "sd_subfolder": "themes",
     },
 }
 
@@ -908,6 +910,7 @@ class App(tk.Tk):
         section("General", r); r += 1
         field("general", "check_for_updates", "Check for updates at start", r, "check"); r += 1
         field("general", "history_limit", "History entries to keep", r); r += 1
+        field("general", "sd_subfolder", "Folder on SD card", r); r += 1
 
         row = ttk.Frame(f)
         row.grid(row=r, column=0, columnspan=3, sticky="w", pady=12)
@@ -1444,6 +1447,7 @@ class App(tk.Tk):
         row.pack(fill="x")
         ttk.Button(row, text="Show file", command=self.history_show).pack(side="left")
         ttk.Button(row, text="Copy SHA-256", command=self.history_copy_hash).pack(side="left", padx=4)
+        ttk.Button(row, text="Copy to SD card…", command=self.copy_to_sd).pack(side="left")
         ttk.Button(row, text="Clear history", command=self.history_clear).pack(side="left")
         return f
 
@@ -1466,6 +1470,43 @@ class App(tk.Tk):
             folder = os.path.dirname(path)
             if os.path.isdir(folder):
                 open_path(folder)
+
+    def copy_to_sd(self):
+        g = self.settings["general"]
+        hist = list(reversed(g["history"]))
+        picked = [hist[int(i)] for i in self.hist_tree.selection()]
+        if not picked:
+            messagebox.showwarning(APP_NAME, "Select one or more builds in the list first.")
+            return
+        root = filedialog.askdirectory(title="Choose your SD card or USB drive",
+                                       initialdir=g["sd_folder"] or None)
+        if not root:
+            return
+        g["sd_folder"] = root
+        self.persist()
+        self.log(f"Copying {len(picked)} file(s) to {root}…")
+        threading.Thread(target=self.copy_files_verified,
+                         args=([h["path"] for h in picked], os.path.join(root, g["sd_subfolder"])),
+                         daemon=True).start()
+
+    def copy_files_verified(self, paths, dest):
+        """Copy files and confirm each copy's SHA-256 matches the original."""
+        os.makedirs(dest, exist_ok=True)
+        ok = 0
+        for src in paths:
+            try:
+                target = os.path.join(dest, os.path.basename(src))
+                shutil.copy2(src, target)
+                if hasattr(os, "sync"):
+                    os.sync()
+                if sha256(src) != sha256(target):
+                    raise RuntimeError("checksum mismatch - the card may be failing")
+                self.log(f"Copied and verified: {target}")
+                ok += 1
+            except Exception as e:
+                self.log(f"Could not copy {src}: {e}")
+        self.log(f"{ok} of {len(paths)} file(s) copied to {dest}. Eject the card safely before removing it.")
+        return ok
 
     def history_copy_hash(self):
         hist = list(reversed(self.settings["general"]["history"]))
@@ -1750,6 +1791,8 @@ def selftest():
             "normal": [f"{sys.executable} -c open('{{output}}','wb').write(b'x'*10)"], "run_first": []})
         out = Builder(s2, print).build(os.path.join(folder, "demo.mym"), "demo", "4.3", "U", "nospin")
         assert os.path.basename(out) == "demo4.3U_nospin.csm" and len(sha256(out)) == 64
+        sd = os.path.join(tempfile.mkdtemp(prefix="wiithemer_sd_"), "themes")
+        assert app.copy_files_verified([out], sd) == 1 and os.path.isfile(os.path.join(sd, os.path.basename(out)))
     app.theme_tree.selection_set("demo")
     app.hide_selected()
     assert not app.theme_tree.exists("demo")
