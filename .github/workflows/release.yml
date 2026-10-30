@@ -18,6 +18,7 @@ env:
     --add-data app/catalog.json:.
     --add-data app/tools:tools
     --add-data app/spins:spins
+    --add-data app/lang:lang
     app/wiithemer_desktop.py
 
 jobs:

@@ -46,6 +46,7 @@
    - [Adding System Menu versions](#adding-system-menu-versions)
    - [Hosting your own theme catalog](#hosting-your-own-theme-catalog)
    - [Sharing your setup](#sharing-your-setup)
+   - [Languages and renaming any text](#languages-and-renaming-any-text)
 8. [System Menu versions and regions](#system-menu-versions-and-regions)
 9. [Channel spin options](#channel-spin-options)
 10. [Built-in theme list](#built-in-theme-list)
@@ -273,6 +274,7 @@ Lists your last builds (50 by default; change it in Settings → General): when,
 A form for the most common settings. Click **Apply** to save; the app redraws itself with the changes.
 
 - **Color preset:** one click applies a whole color scheme: **Midnight** (default), **Wii Classic**, **Light**, **Dark Wii Red**, **Dark Wii Purple**, **Lime** or **High Contrast**. You can fine-tune any color afterwards.
+- **Language:** English, **Español**, **Français**, **Deutsch** or **Português**, plus any language packs you add. See [Languages and renaming any text](#languages-and-renaming-any-text).
 - **Layout:** choose which tabs are shown and in what order, for example `build, history, mym`. Build Theme and Advanced (JSON) are always shown so you can't lock yourself out. You can also show or hide the log panel and set its height.
 - **Appearance:** widget style, font, font size, background, text, accent, text-on-accent, field and selection colors (each with a **Pick** color picker), preview width and window title.
 - **Build:** output file name template, keep work folder, and also save the System Menu `.app`.
@@ -340,6 +342,8 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `preview_size` | `360` | Largest preview image size, in pixels. |
 | `window_geometry` | `"1100x720"` | Starting window size (and position), Tk style: `WIDTHxHEIGHT+X+Y`. |
 | `window_title` | `"WiiThemer Desktop"` | Window title. |
+| `language` | `"English"` | UI language. Bundled: English, Español, Français, Deutsch, Português. |
+| `custom_strings` | `{}` | Your own wording for any label, button, tab or menu item: `{"Build Theme": "Make it!"}`. |
 | `tabs` | `["build", "mym", "catalog", "history", "settings", "advanced"]` | Which tabs are shown, in order. `build` and `advanced` are always added back if you leave them out. |
 | `show_log` | `true` | Show the log panel at the bottom. |
 | `log_height` | `8` | Height of the log panel, in lines. |
@@ -486,6 +490,25 @@ Region-specific themes use `{r}` in the file name. It's replaced with the region
 ### Sharing your setup
 
 Use **Settings → Export…** to save one `wiithemer-settings.json` with your colors, pipeline, custom themes and everything else. Someone else can load it with **Import…**. Custom themes that point to local files only work on the computer that has those files. Use URL themes for setups you share.
+
+### Languages and renaming any text
+
+Every tab name, button, label, column heading and menu item goes through a lookup table, so you can:
+
+1. **Switch language:** go to **Settings → Language**, then **Apply**. Bundled packs: Español, Français, Deutsch, Português. Anything a pack doesn't cover stays in English.
+2. **Rename anything yourself:** in **Advanced (JSON)**, add entries to `appearance.custom_strings`. Each maps the **English** text to what you want shown, and works on top of whichever language you picked:
+
+   ```json
+   "custom_strings": {
+     "Build Theme": "Make it!",
+     "Build theme": "🚀 Go",
+     "Favorites only": "Just my faves"
+   }
+   ```
+
+3. **Add a whole new language:** put `<Language name>.json` in a `lang` folder inside the settings folder (**Help → Open settings folder**), using the same `{"English text": "translation"}` format as [`app/lang/`](app/lang). It then shows up in the Language list. A file there with the same name as a bundled pack overrides it. Pull requests with new languages are welcome.
+
+Text inside popups, and the long help paragraphs, aren't translated yet.
 
 ---
 
@@ -701,7 +724,7 @@ python app/wiithemer_desktop.py --selftest
 Package it yourself with PyInstaller (the same arguments CI uses):
 
 ```bash
-pyinstaller --noconfirm --clean --windowed --name WiiThemerDesktop --icon packaging/icon.png --add-data app/catalog.json:. --add-data app/tools:tools --add-data app/spins:spins app/wiithemer_desktop.py
+pyinstaller --noconfirm --clean --windowed --name WiiThemerDesktop --icon packaging/icon.png --add-data app/catalog.json:. --add-data app/tools:tools --add-data app/spins:spins --add-data app/lang:lang app/wiithemer_desktop.py
 ```
 
 - Windows: add `--onefile` to get one `.exe` in `dist/`.
@@ -750,6 +773,7 @@ wiithemer-desktop/
 ├── app/
 │   ├── wiithemer_desktop.py   # the whole app (GUI, builder, MYM editor)
 │   ├── catalog.json           # built-in theme list (name, file, preview, regions)
+│   ├── lang/                  # language packs (Español, Français, Deutsch, Português)
 │   ├── spins/                 # nospin / spin / fastspin / transchan .mym mods
 │   └── tools/                 # themewii.exe, SharpZipLib, ASH.exe, 7z.exe (from WiiThemer)
 ├── docs/                      # GitHub Pages website (index.html, catalog.json, icon)
@@ -837,6 +861,10 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ---
 
 ## Changelog
+
+### v1.6.0
+- **Languages**: Español, Français, Deutsch and Português, plus your own packs in the settings folder.
+- **Rename any text**: `custom_strings` changes any label, button, tab or menu item.
 
 ### v1.5.0
 - **Wii profiles**: save and switch between named setups for each console.

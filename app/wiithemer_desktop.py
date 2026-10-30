@@ -27,7 +27,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.5.0"
+APP_VERSION = "1.6.0"
 MOD = "Command" if sys.platform == "darwin" else "Control"
 MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
@@ -74,6 +74,62 @@ def config_dir():
 
 
 SETTINGS_FILE = os.path.join(config_dir(), "settings.json")
+
+# ---------- UI text: translations and custom wording ----------
+# Every widget/menu "text" and "label" option passes through STRINGS, so a language
+# pack (lang/<Name>.json) or the user's own custom_strings can reword anything.
+STRINGS = {}
+
+
+def language_dirs():
+    return [os.path.join(resource_dir(), "lang"), os.path.join(config_dir(), "lang")]
+
+
+def available_languages():
+    names = {"English"}
+    for d in language_dirs():
+        if os.path.isdir(d):
+            names.update(os.path.splitext(f)[0] for f in os.listdir(d) if f.endswith(".json"))
+    return sorted(names)
+
+
+def set_language(language, custom=None):
+    STRINGS.clear()
+    for d in language_dirs():  # user packs override bundled ones
+        path = os.path.join(d, language + ".json")
+        if language != "English" and os.path.isfile(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    STRINGS.update(json.load(f))
+            except (OSError, ValueError):
+                pass
+    STRINGS.update(custom or {})
+
+
+def _translate_opts(opts):
+    if not STRINGS or not isinstance(opts, dict) or not ("text" in opts or "label" in opts):
+        return opts
+    opts = dict(opts)
+    for key in ("text", "label"):
+        if isinstance(opts.get(key), str):
+            opts[key] = STRINGS.get(opts[key], opts[key])
+    return opts
+
+
+_orig_options = tk.Misc._options
+_orig_format_optdict = ttk._format_optdict
+
+
+def _options(self, cnf, kw=None):
+    return _orig_options(self, _translate_opts(cnf), _translate_opts(kw))
+
+
+def _format_optdict(optdict, *args, **kwargs):
+    return _orig_format_optdict(_translate_opts(optdict), *args, **kwargs)
+
+
+tk.Misc._options = _options
+ttk._format_optdict = _format_optdict
 CACHE_DIR = os.path.join(config_dir(), "cache")
 
 # System Menu versions, straight from wiithemer's getappndisplayname().
@@ -115,6 +171,8 @@ DEFAULT_SETTINGS = {
         "preview_size": 360,
         "window_geometry": "1100x720",
         "window_title": APP_NAME,
+        "language": "English",
+        "custom_strings": {},
         "tabs": ["build", "mym", "catalog", "history", "settings", "advanced"],
         "show_log": True,
         "log_height": 8,
@@ -384,6 +442,7 @@ class App(tk.Tk):
     # ---------- appearance ----------
     def apply_appearance(self):
         a = self.settings["appearance"]
+        set_language(a.get("language", "English"), a.get("custom_strings"))
         self.title(a["window_title"])
         self.geometry(a["window_geometry"])
         self.configure(bg=a["bg"])
@@ -796,6 +855,7 @@ class App(tk.Tk):
             field("appearance", key, label, r, "color"); r += 1
         field("appearance", "preview_size", "Preview width (px)", r); r += 1
         field("appearance", "window_title", "Window title", r); r += 1
+        field("appearance", "language", "Language", r, "combo", available_languages()); r += 1
         section("Layout", r); r += 1
         field("appearance", "tabs", "Tabs (order, comma-separated)", r); r += 1
         ttk.Label(f, text="  names: build, mym, catalog, history, settings, advanced - leave one out to hide it"
@@ -1508,6 +1568,17 @@ def selftest():
     app.zoom(1)
     app.zoom(-1)
     app.use_preset("Wii Classic")
+    for lang in available_languages():
+        app.settings["appearance"]["language"] = lang
+        app.rebuild()
+    assert len(available_languages()) >= 5
+    app.settings["appearance"]["language"] = "Deutsch"
+    app.rebuild()
+    assert app.nb.tab(0, "text") == "Theme erstellen"
+    app.settings["appearance"].update(language="English", custom_strings={"Build Theme": "Make it!"})
+    app.rebuild()
+    assert app.nb.tab(0, "text") == "Make it!"
+    app.settings["appearance"]["custom_strings"] = {}
     app.save_profile("Test Wii")
     app.v_version.set("4.0")
     app.load_profile("Test Wii")
