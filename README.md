@@ -372,7 +372,7 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `accent_fg` | `"#0b1016"` | Text color on top of the accent. |
 | `field_bg` | `"#2a2c36"` | Background of inputs, lists and text boxes. |
 | `select_bg` | `"#34b6e8"` | Background of selected rows. |
-| `preview_size` | `300` | Largest preview image size, in pixels. |
+| `preview_size` | `260` | Largest preview image size, in pixels. |
 | `ui_scale` | `1.0` | Scales the whole interface (0.5 to 4.0), for high-resolution screens or easier reading. |
 | `window_geometry` | `"1100x720"` | Starting window size (and position), Tk style: `WIDTHxHEIGHT+X+Y`. |
 | `window_title` | `"WiiThemer Desktop"` | Window title. |
@@ -911,10 +911,11 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ## Changelog
 
 ### v2.2.0
-- Fix: the **Build theme button was cut off** at the default window size (since v1.8). The preview and notes now sit side by side, and a self-test checks the button stays visible.
+- Fix: the **Build theme button was cut off** at the default window size (since v1.8). The preview and notes now sit side by side, and a self-test checks that the button, the last option row and the log all stay visible.
 - Fix: **read-only dropdowns** (Wii profile, Sort, Language) were hard to read in dark presets.
 - Fix: the **log panel** could be squeezed out of view at the default window size.
-- Smaller default preview (300 px) and log (6 lines).
+- The **Build theme / Batch build / Open output folder / Test tools** buttons are now at the top of the Build tab, so they're always visible.
+- Smaller default preview (260 px) and log (6 lines).
 - **Screenshots** in the README and on the website, made by a new `--screenshots` mode and a manual "Screenshots" workflow. They use an original demo theme, so no third-party theme art is stored in this repo.
 
 ### v2.1.0

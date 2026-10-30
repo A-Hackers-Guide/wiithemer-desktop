@@ -169,7 +169,7 @@ DEFAULT_SETTINGS = {
         "accent_fg": "#0b1016",
         "field_bg": "#2a2c36",
         "select_bg": "#34b6e8",
-        "preview_size": 300,
+        "preview_size": 260,
         "window_geometry": "1100x720",
         "window_title": APP_NAME,
         "language": "English",
@@ -851,11 +851,13 @@ class App(tk.Tk):
         ttk.Button(opts, text="…", width=3, command=lambda: self.pick_dir(self.v_outdir)).grid(row=4, column=2)
         self.v_base = tk.StringVar(value=b["base_app_path"])
         ttk.Label(opts, text="Own System Menu .app\n(optional)").grid(row=5, column=0, sticky="w", pady=3)
-        ttk.Entry(opts, textvariable=self.v_base, width=40).grid(row=5, column=1, sticky="w", padx=8)
+        self.base_entry = ttk.Entry(opts, textvariable=self.v_base, width=40)
+        self.base_entry.grid(row=5, column=1, sticky="w", padx=8)
         ttk.Button(opts, text="…", width=3, command=lambda: self.pick_file(self.v_base)).grid(row=5, column=2)
 
+        # The action buttons go at the top of the panel so they can never be pushed off-screen.
         actions = ttk.Frame(right)
-        actions.pack(anchor="w", pady=12)
+        actions.pack(anchor="w", pady=(0, 4), before=self.theme_title)
         self.build_button = ttk.Button(actions, text="Build theme", style="Accent.TButton",
                                        command=self.start_build)
         self.build_button.pack(side="left")
@@ -863,7 +865,7 @@ class App(tk.Tk):
         ttk.Button(actions, text="Open output folder", command=self.open_output).pack(side="left")
         ttk.Button(actions, text="Test tools", command=self.test_tools).pack(side="left", padx=4)
         self.progress = ttk.Progressbar(right, length=420, mode="determinate")
-        self.progress.pack(anchor="w")
+        self.progress.pack(anchor="w", pady=(0, 6), before=self.theme_title)
         ttk.Label(right, wraplength=520, text=(
             "Install the resulting .csm with a theme installer on a softmodded Wii "
             "(always keep a NAND backup and Priiloader). On macOS/Linux the build "
@@ -1877,10 +1879,13 @@ def selftest():
     # The Build button must be fully visible at the default window size.
     app.nb.select(app.tab_frames["build"])
     app.update()
+    # Measure against the area each widget actually lives in (clipped children extend past it).
+    tab_bottom = app.nb.winfo_rooty() + app.nb.winfo_height()
     window_bottom = app.winfo_rooty() + app.winfo_height()
-    for widget in (app.build_button, app.log_box):
+    for widget, limit in ((app.build_button, tab_bottom), (app.base_entry, tab_bottom),
+                          (app.log_box, window_bottom)):
         bottom = widget.winfo_rooty() + widget.winfo_height()
-        assert widget.winfo_ismapped() and bottom <= window_bottom, (str(widget), bottom, window_bottom)
+        assert widget.winfo_ismapped() and bottom <= limit, (str(widget), bottom, limit)
     assert len(app.catalog) > 0 and os.path.exists(os.path.join(resource_dir(), "tools", "themewii.exe"))
     for i in range(len(app.nb.tabs())):
         app.nb.select(i)
