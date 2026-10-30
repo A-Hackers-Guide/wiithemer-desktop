@@ -26,7 +26,26 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.1.0"
+REPO = "A-Hackers-Guide/wiithemer-desktop"
+
+# Color presets for Settings > Appearance.
+PRESETS = {
+    "Midnight": {"bg": "#1e1f26", "fg": "#e8e8ee", "accent": "#34b6e8", "accent_fg": "#0b1016",
+                 "field_bg": "#2a2c36", "select_bg": "#34b6e8"},
+    "Wii Classic": {"bg": "#f2f4f7", "fg": "#33363d", "accent": "#34bfeb", "accent_fg": "#ffffff",
+                    "field_bg": "#ffffff", "select_bg": "#8fdcf5"},
+    "Light": {"bg": "#fafafa", "fg": "#1a1a1a", "accent": "#0a6ed1", "accent_fg": "#ffffff",
+              "field_bg": "#ffffff", "select_bg": "#b8d8f5"},
+    "Dark Wii Red": {"bg": "#141414", "fg": "#f1e9e9", "accent": "#d83a3a", "accent_fg": "#ffffff",
+                     "field_bg": "#242020", "select_bg": "#d83a3a"},
+    "Dark Wii Purple": {"bg": "#17131f", "fg": "#ece6f5", "accent": "#9b6bf2", "accent_fg": "#ffffff",
+                        "field_bg": "#241e30", "select_bg": "#9b6bf2"},
+    "Lime": {"bg": "#101510", "fg": "#e6f2e6", "accent": "#8fd14f", "accent_fg": "#0e1a05",
+             "field_bg": "#1c241c", "select_bg": "#8fd14f"},
+    "High Contrast": {"bg": "#000000", "fg": "#ffffff", "accent": "#ffd400", "accent_fg": "#000000",
+                      "field_bg": "#000000", "select_bg": "#ffd400"},
+}
 
 try:
     from PIL import Image, ImageTk
@@ -120,8 +139,16 @@ DEFAULT_SETTINGS = {
         "preview_path": "previewpics/",
         "custom_themes": [],
         "hidden_themes": [],
+        "favorites": [],
+    },
+    "general": {
+        "check_for_updates": True,
+        "history": [],
+        "history_limit": 50,
     },
 }
+
+ALL_COMBOS = [(v, r) for r in "UEJK" for v in ("4.3", "4.2", "4.1", "4.0") if v + r in VERSIONS]
 
 
 def deep_merge(base, override):
@@ -166,6 +193,25 @@ def download(url, dest, log=None):
     return dest
 
 
+def open_path(path):
+    if sys.platform == "win32":
+        os.startfile(path)  # noqa
+    else:
+        subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", path])
+
+
+def latest_release():
+    """Return the latest release tag on GitHub, or None."""
+    req = urllib.request.Request(f"https://api.github.com/repos/{REPO}/releases/latest",
+                                 headers={"User-Agent": f"{APP_NAME}/{APP_VERSION}"})
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return json.load(r).get("tag_name")
+
+
+def version_tuple(v):
+    return tuple(int(x) for x in v.lstrip("v").split(".") if x.isdigit())
+
+
 class Builder:
     """Runs the themewii pipeline. Mirrors wiithemer's index.php build steps."""
 
@@ -191,6 +237,24 @@ class Builder:
                 "macOS: brew install --cask wine-stable\n"
                 "Linux: sudo apt install wine")
         return wine + [exe]
+
+    def check_tools(self):
+        """Log what the build will use; returns True when everything is found."""
+        tdir, exe = self.themewii_dir()
+        ok = os.path.isfile(os.path.join(tdir, exe))
+        self.log(f"themewii: {os.path.join(tdir, exe)} ({'found' if ok else 'MISSING'})")
+        try:
+            prefix = self.command_prefix(exe)
+            if len(prefix) > 1:
+                out = subprocess.run(prefix[:-1] + ["--version"], capture_output=True, text=True, timeout=60)
+                self.log(f"Wine: {' '.join(prefix[:-1])} -> {(out.stdout or out.stderr).strip()}")
+            else:
+                self.log("Wine: not needed on Windows")
+        except Exception as e:
+            self.log(f"Wine: {e}")
+            ok = False
+        self.log("Tools look good." if ok else "Some tools are missing - see above.")
+        return ok
 
     def build(self, theme_file, theme_label, version, region, spin):
         b, tools = self.s["build"], self.s["tools"]
@@ -278,6 +342,20 @@ class App(tk.Tk):
         self.build_ui()
         self.refresh_theme_list()
         self.after(100, self.drain)
+        if self.settings["general"]["check_for_updates"] and "--selftest" not in sys.argv:
+            threading.Thread(target=self.check_updates, daemon=True).start()
+
+    def check_updates(self, manual=False):
+        try:
+            tag = latest_release()
+            if tag and version_tuple(tag) > version_tuple(APP_VERSION):
+                self.log(f"Update available: {tag} - https://github.com/{REPO}/releases/latest")
+                self.msgs.put(("update", tag))
+            elif manual:
+                self.log(f"You have the latest version ({APP_VERSION}).")
+        except Exception as e:
+            if manual:
+                self.log(f"Update check failed: {e}")
 
     # ---------- appearance ----------
     def apply_appearance(self):
@@ -326,6 +404,7 @@ class App(tk.Tk):
         nb.add(self.build_tab(nb), text="Build Theme")
         nb.add(self.mym_tab(nb), text="MYM Editor")
         nb.add(self.catalog_tab(nb), text="Catalog")
+        nb.add(self.history_tab(nb), text="History")
         nb.add(self.settings_tab(nb), text="Settings")
         nb.add(self.raw_tab(nb), text="Advanced (JSON)")
 
@@ -344,17 +423,24 @@ class App(tk.Tk):
         self.search = tk.StringVar()
         self.search.trace_add("write", lambda *_: self.refresh_theme_list())
         ttk.Entry(left, textvariable=self.search).pack(fill="x", pady=4)
-        self.theme_tree = ttk.Treeview(left, columns=("src",), show="tree headings", height=18)
+        self.fav_only = tk.BooleanVar(value=False)
+        ttk.Checkbutton(left, text="Favorites only", variable=self.fav_only,
+                        command=self.refresh_theme_list).pack(anchor="w")
+        self.theme_tree = ttk.Treeview(left, columns=("fav", "src"), show="tree headings",
+                                       height=18, selectmode="extended")
         self.theme_tree.heading("#0", text="Name")
+        self.theme_tree.heading("fav", text="★")
         self.theme_tree.heading("src", text="Source")
         self.theme_tree.column("#0", width=220)
-        self.theme_tree.column("src", width=80)
+        self.theme_tree.column("fav", width=30, anchor="center")
+        self.theme_tree.column("src", width=70)
         self.theme_tree.pack(fill="y", expand=True)
         self.theme_tree.bind("<<TreeviewSelect>>", lambda e: self.on_theme_select())
         row = ttk.Frame(left)
         row.pack(fill="x", pady=4)
         ttk.Button(row, text="Open .mym…", command=self.add_local_theme).pack(side="left")
         ttk.Button(row, text="Add URL…", command=self.add_url_theme).pack(side="left", padx=4)
+        ttk.Button(row, text="★", width=3, command=self.toggle_favorite).pack(side="left")
 
         right = ttk.Frame(f, padding=(16, 0))
         right.pack(side="left", fill="both", expand=True)
@@ -388,8 +474,15 @@ class App(tk.Tk):
         ttk.Entry(opts, textvariable=self.v_base, width=40).grid(row=5, column=1, sticky="w", padx=8)
         ttk.Button(opts, text="…", width=3, command=lambda: self.pick_file(self.v_base)).grid(row=5, column=2)
 
-        ttk.Button(right, text="Build theme", style="Accent.TButton",
-                   command=self.start_build).pack(anchor="w", pady=12)
+        actions = ttk.Frame(right)
+        actions.pack(anchor="w", pady=12)
+        ttk.Button(actions, text="Build theme", style="Accent.TButton",
+                   command=self.start_build).pack(side="left")
+        ttk.Button(actions, text="Batch build…", command=self.batch_dialog).pack(side="left", padx=4)
+        ttk.Button(actions, text="Open output folder", command=self.open_output).pack(side="left")
+        ttk.Button(actions, text="Test tools", command=self.test_tools).pack(side="left", padx=4)
+        self.progress = ttk.Progressbar(right, length=420, mode="determinate")
+        self.progress.pack(anchor="w")
         ttk.Label(right, wraplength=520, text=(
             "Install the resulting .csm with a theme installer on a softmodded Wii "
             "(always keep a NAND backup and Priiloader). On macOS/Linux the build "
@@ -469,6 +562,11 @@ class App(tk.Tk):
 
         r = 0
         section("Appearance", r); r += 1
+        self.v_preset = tk.StringVar(value="")
+        ttk.Label(f, text="Color preset").grid(row=r, column=0, sticky="w")
+        ttk.Combobox(f, textvariable=self.v_preset, values=list(PRESETS), width=30,
+                     state="readonly").grid(row=r, column=1, sticky="w")
+        ttk.Button(f, text="Use", command=self.apply_preset).grid(row=r, column=2); r += 1
         field("appearance", "ttk_theme", "Widget style", r, "combo", ttk.Style(self).theme_names()); r += 1
         field("appearance", "font_family", "Font", r, "combo", sorted(set(tkfont.families()))); r += 1
         field("appearance", "font_size", "Font size", r); r += 1
@@ -490,6 +588,9 @@ class App(tk.Tk):
         field("tools", "use_wine_on_windows", "Use Wine on Windows", r, "check"); r += 1
         field("tools", "key", "themewii key argument", r); r += 1
         field("tools", "timeout_seconds", "Step timeout (s)", r); r += 1
+        section("General", r); r += 1
+        field("general", "check_for_updates", "Check for updates at start", r, "check"); r += 1
+        field("general", "history_limit", "History entries to keep", r); r += 1
 
         row = ttk.Frame(f)
         row.grid(row=r, column=0, columnspan=3, sticky="w", pady=12)
@@ -497,7 +598,16 @@ class App(tk.Tk):
         ttk.Button(row, text="Import…", command=self.import_settings).pack(side="left", padx=4)
         ttk.Button(row, text="Export…", command=self.export_settings).pack(side="left")
         ttk.Button(row, text="Reset to defaults", command=self.reset_settings).pack(side="left", padx=4)
+        ttk.Button(row, text="Check for updates",
+                   command=lambda: threading.Thread(target=self.check_updates, args=(True,),
+                                                    daemon=True).start()).pack(side="left")
         return f
+
+    def apply_preset(self):
+        preset = PRESETS.get(self.v_preset.get())
+        if preset:
+            self.settings["appearance"].update(preset)
+            self.rebuild()
 
     def raw_tab(self, parent):
         f = ttk.Frame(parent, padding=10)
@@ -527,8 +637,22 @@ class App(tk.Tk):
                     self.log_box.see("end")
                 elif kind == "preview":
                     self.show_preview(payload)
-                elif kind == "done":
-                    messagebox.showinfo(APP_NAME, f"Theme built:\n{payload}")
+                elif kind == "progress":
+                    self.progress.configure(value=payload)
+                elif kind == "history":
+                    self.add_history(payload)
+                elif kind == "update":
+                    if messagebox.askyesno(APP_NAME, f"Version {payload} is available. Open the download page?"):
+                        open_path(f"https://github.com/{REPO}/releases/latest")
+                elif kind == "finished":
+                    self.busy = False
+                    built, failed = payload
+                    msg = f"Built {len(built)} theme(s)."
+                    if built:
+                        msg += "\n\n" + "\n".join(built[:10]) + ("\n…" if len(built) > 10 else "")
+                    if failed:
+                        msg += f"\n\n{len(failed)} failed:\n" + "\n".join(failed[:10])
+                    (messagebox.showwarning if failed else messagebox.showinfo)(APP_NAME, msg)
                 elif kind == "error":
                     messagebox.showerror(APP_NAME, payload)
         except queue.Empty:
@@ -570,17 +694,36 @@ class App(tk.Tk):
             return
         q = self.search.get().lower()
         hidden = set(self.settings["catalog"]["hidden_themes"])
+        favs = set(self.settings["catalog"]["favorites"])
         self.theme_tree.delete(*self.theme_tree.get_children())
         for t in self.all_themes():
             if t["name"] in hidden or (q and q not in t["name"].lower()):
                 continue
-            self.theme_tree.insert("", "end", iid=t["name"], text=t["name"], values=(t["source"],))
+            if self.fav_only.get() and t["name"] not in favs:
+                continue
+            self.theme_tree.insert("", "end", iid=t["name"], text=t["name"],
+                                   values=("★" if t["name"] in favs else "", t["source"]))
+
+    def toggle_favorite(self):
+        favs = self.settings["catalog"]["favorites"]
+        for name in self.theme_tree.selection():
+            if name in favs:
+                favs.remove(name)
+            else:
+                favs.append(name)
+        sel = self.theme_tree.selection()
+        self.persist()
+        self.refresh_theme_list()
+        self.theme_tree.selection_set([n for n in sel if self.theme_tree.exists(n)])
+
+    def selected_themes(self):
+        names = self.theme_tree.selection()
+        by_name = {t["name"]: t for t in self.all_themes()}
+        return [by_name[n] for n in names if n in by_name]
 
     def selected_theme(self):
-        sel = self.theme_tree.selection()
-        if not sel:
-            return None
-        return next((t for t in self.all_themes() if t["name"] == sel[0]), None)
+        themes = self.selected_themes()
+        return themes[0] if themes else None
 
     def on_theme_select(self):
         t = self.selected_theme()
@@ -663,29 +806,137 @@ class App(tk.Tk):
         return download(c["base_url"] + c["mym_path"] + urllib.request.quote(f),
                         os.path.join(CACHE_DIR, "mym", f), self.log)
 
-    def start_build(self):
-        t = self.selected_theme()
-        if not t:
-            messagebox.showwarning(APP_NAME, "Select a theme first.")
-            return
+    def save_build_options(self):
         b = self.settings["build"]
         b.update(version=self.v_version.get(), region=self.v_region.get(), spin=self.v_spin.get(),
                  run_first_override=self.v_runfirst.get(), output_dir=self.v_outdir.get(),
                  base_app_path=self.v_base.get())
         self.persist()
+        return b
+
+    def start_build(self):
+        themes = self.selected_themes()
+        if not themes:
+            messagebox.showwarning(APP_NAME, "Select a theme first.")
+            return
+        b = self.save_build_options()
+        self.run_jobs([(t, b["version"], b["region"]) for t in themes])
+
+    def batch_dialog(self):
+        themes = self.selected_themes()
+        if not themes:
+            messagebox.showwarning(APP_NAME, "Select one or more themes first (Ctrl/Cmd-click).")
+            return
+        win = tk.Toplevel(self)
+        win.title("Batch build")
+        win.configure(bg=self.settings["appearance"]["bg"])
+        ttk.Label(win, text=f"{len(themes)} theme(s): " + ", ".join(t["name"] for t in themes[:6])
+                  + ("…" if len(themes) > 6 else ""), wraplength=420).grid(row=0, column=0, columnspan=5, padx=8, pady=6)
+        checks = {}
+        for c, r in enumerate("UEJK"):
+            ttk.Label(win, text=r).grid(row=1, column=c + 1)
+        for row, v in enumerate(("4.3", "4.2", "4.1", "4.0"), 2):
+            ttk.Label(win, text=v).grid(row=row, column=0, padx=8)
+            for c, r in enumerate("UEJK"):
+                if v + r in VERSIONS:
+                    var = tk.BooleanVar(value=(v, r) == (self.v_version.get(), self.v_region.get()))
+                    checks[(v, r)] = var
+                    ttk.Checkbutton(win, variable=var).grid(row=row, column=c + 1)
+
+        def set_all(val):
+            for var in checks.values():
+                var.set(val)
+
+        def go():
+            combos = [k for k, var in checks.items() if var.get()]
+            win.destroy()
+            self.save_build_options()
+            self.run_jobs([(t, v, r) for t in themes for v, r in combos])
+        bar = ttk.Frame(win)
+        bar.grid(row=6, column=0, columnspan=5, pady=8)
+        ttk.Button(bar, text="All", command=lambda: set_all(True)).pack(side="left")
+        ttk.Button(bar, text="None", command=lambda: set_all(False)).pack(side="left", padx=4)
+        ttk.Button(bar, text="Build", style="Accent.TButton", command=go).pack(side="left")
+
+    def run_jobs(self, jobs):
+        if getattr(self, "busy", False):
+            messagebox.showwarning(APP_NAME, "A build is already running.")
+            return
         settings = copy.deepcopy(self.settings)
+        spin = settings["build"]["spin"]
+        self.busy = True
+        self.progress.configure(maximum=len(jobs), value=0)
 
         def work():
-            try:
-                path = self.resolve_theme_file(t, b["region"])
-                out = Builder(settings, self.log).build(path, t["name"], b["version"], b["region"], b["spin"])
-                self.log(f"Done: {out}")
-                self.msgs.put(("done", out))
-            except Exception as e:
-                self.log(traceback.format_exc())
-                self.msgs.put(("error", str(e)))
-        self.log(f"Building {t['name']} for {b['version']}{b['region']} ({b['spin']})…")
+            built, failed = [], []
+            for i, (t, version, region) in enumerate(jobs, 1):
+                self.log(f"[{i}/{len(jobs)}] Building {t['name']} for {version}{region} ({spin})…")
+                try:
+                    if t.get("regions") and region not in t["regions"]:
+                        raise RuntimeError(f"{t['name']} is not available for region {region}.")
+                    path = self.resolve_theme_file(t, region)
+                    out = Builder(settings, self.log).build(path, t["name"], version, region, spin)
+                    self.log(f"Done: {out}")
+                    built.append(out)
+                    self.msgs.put(("history", {"theme": t["name"], "display": version + region,
+                                               "spin": spin, "path": out}))
+                except Exception as e:
+                    self.log(traceback.format_exc())
+                    failed.append(f"{t['name']} {version}{region}: {e}")
+                self.msgs.put(("progress", i))
+            self.msgs.put(("finished", (built, failed)))
         threading.Thread(target=work, daemon=True).start()
+
+    def open_output(self):
+        d = self.v_outdir.get()
+        os.makedirs(d, exist_ok=True)
+        open_path(d)
+
+    def test_tools(self):
+        settings = copy.deepcopy(self.settings)
+        threading.Thread(target=lambda: Builder(settings, self.log).check_tools(), daemon=True).start()
+
+    # ---------- history tab ----------
+    def history_tab(self, parent):
+        f = ttk.Frame(parent, padding=10)
+        ttk.Label(f, text="Build history", style="Header.TLabel").pack(anchor="w")
+        self.hist_tree = ttk.Treeview(f, columns=("when", "display", "spin", "path"), show="headings")
+        for col, label, w in [("when", "When", 150), ("display", "Version", 70),
+                              ("spin", "Spin", 80), ("path", "File", 520)]:
+            self.hist_tree.heading(col, text=label)
+            self.hist_tree.column(col, width=w)
+        self.hist_tree.pack(fill="both", expand=True, pady=6)
+        self.refresh_history()
+        row = ttk.Frame(f)
+        row.pack(fill="x")
+        ttk.Button(row, text="Show file", command=self.history_show).pack(side="left")
+        ttk.Button(row, text="Clear history", command=self.history_clear).pack(side="left", padx=4)
+        return f
+
+    def refresh_history(self):
+        self.hist_tree.delete(*self.hist_tree.get_children())
+        for i, h in enumerate(reversed(self.settings["general"]["history"])):
+            self.hist_tree.insert("", "end", iid=str(i), values=(h["when"], h["display"], h["spin"], h["path"]))
+
+    def add_history(self, entry):
+        import datetime
+        entry["when"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+        g = self.settings["general"]
+        g["history"] = (g["history"] + [entry])[-int(g["history_limit"]):]
+        self.persist()
+        self.refresh_history()
+
+    def history_show(self):
+        for iid in self.hist_tree.selection():
+            path = self.hist_tree.set(iid, "path")
+            folder = os.path.dirname(path)
+            if os.path.isdir(folder):
+                open_path(folder)
+
+    def history_clear(self):
+        self.settings["general"]["history"] = []
+        self.persist()
+        self.refresh_history()
 
     # ---------- catalog tab ----------
     def toggle_hidden(self):
@@ -862,13 +1113,102 @@ class App(tk.Tk):
                              "preview": None, "source": "local"})
 
 
-def main():
-    if "--selftest" in sys.argv:
-        app = App()
+def cli(argv):
+    import argparse
+    ap = argparse.ArgumentParser(prog="WiiThemerDesktop --cli", description="Build themes without the GUI.")
+    ap.add_argument("--list", action="store_true", help="list built-in themes and exit")
+    ap.add_argument("--theme", action="append", default=[], help="theme name, or path/URL to a .mym (repeatable)")
+    ap.add_argument("--version", dest="ver", action="append", default=[], help="4.3, 4.2, 4.1, 4.0 (repeatable)")
+    ap.add_argument("--region", action="append", default=[], help="U, E, J, K (repeatable)")
+    ap.add_argument("--all-versions", action="store_true", help="every version/region combination")
+    ap.add_argument("--spin", help="nospin, spin, fastspin, transchan or a path to a .mym")
+    ap.add_argument("--out", help="output folder")
+    ap.add_argument("--base-app", help="your own System Menu .app file")
+    ap.add_argument("--settings", help="settings.json to use instead of your saved one")
+    a = ap.parse_args(argv)
+    settings = load_settings()
+    if a.settings:
+        with open(a.settings, "r", encoding="utf-8") as f:
+            settings = deep_merge(DEFAULT_SETTINGS, json.load(f))
+    catalog = load_catalog()
+    if a.list:
+        for t in catalog:
+            print(f"{t['name']:28} {','.join(t['regions'])}")
+        return 0
+    if not a.theme:
+        ap.error("--theme is required (or use --list)")
+    b = settings["build"]
+    if a.spin:
+        b["spin"] = a.spin
+    if a.out:
+        b["output_dir"] = a.out
+    if a.base_app:
+        b["base_app_path"] = a.base_app
+    combos = ALL_COMBOS if a.all_versions else [
+        (v, r) for v in (a.ver or [b["version"]]) for r in (a.region or [b["region"]]) if v + r in VERSIONS]
+    log = print
+    resolver = App.resolve_theme_file
+    shim = type("Shim", (), {"settings": settings, "log": staticmethod(log)})()
+    by_name = {t["name"].lower(): dict(t, source="catalog") for t in catalog}
+    failures = 0
+    for name in a.theme:
+        if name.lower() in by_name:
+            t = by_name[name.lower()]
+        elif "://" in name:
+            t = {"name": os.path.basename(name), "file": name, "source": "url"}
+        elif os.path.isfile(name):
+            t = {"name": os.path.basename(name), "file": name, "source": "local"}
+        else:
+            print(f"Unknown theme: {name} (see --list)")
+            failures += 1
+            continue
+        for v, r in combos:
+            try:
+                if t.get("regions") and r not in t["regions"]:
+                    raise RuntimeError(f"not available for region {r}")
+                path = resolver(shim, t, r)
+                print("Built:", Builder(settings, log).build(path, t["name"], v, r, b["spin"]))
+            except Exception as e:
+                print(f"FAILED {t['name']} {v}{r}: {e}")
+                failures += 1
+    return 1 if failures else 0
+
+
+def selftest():
+    global SETTINGS_FILE
+    SETTINGS_FILE = os.path.join(tempfile.mkdtemp(prefix="wiithemer_selftest_"), "settings.json")
+    app = App()
+    app.update()
+    assert len(app.catalog) > 0 and os.path.exists(os.path.join(resource_dir(), "tools", "themewii.exe"))
+    for i in range(len(app.nb.tabs())):
+        app.nb.select(i)
         app.update()
-        assert len(app.catalog) > 0 and os.path.exists(os.path.join(resource_dir(), "tools", "themewii.exe"))
-        print(f"selftest ok: {len(app.catalog)} themes")
-        app.destroy()
+    app.theme_tree.selection_set(app.theme_tree.get_children()[0])
+    app.on_theme_select()
+    app.toggle_favorite()
+    app.fav_only.set(True)
+    app.refresh_theme_list()
+    assert len(app.theme_tree.get_children()) == 1
+    app.toggle_favorite()  # undo, keeps the user's settings clean
+    app.fav_only.set(False)
+    for name in PRESETS:
+        app.settings["appearance"].update(PRESETS[name])
+        app.apply_appearance()
+    app.mym_new()
+    app.add_history({"theme": "t", "display": "4.3U", "spin": "nospin", "path": "x.csm"})
+    app.history_clear()
+    app.settings = copy.deepcopy(DEFAULT_SETTINGS)
+    app.rebuild()
+    app.update()
+    print(f"selftest ok: {len(app.catalog)} themes, {len(app.nb.tabs())} tabs, {len(PRESETS)} presets")
+    app.destroy()
+
+
+def main():
+    if "--cli" in sys.argv:
+        sys.exit(cli([x for x in sys.argv[1:] if x != "--cli"]))
+    if "--selftest" in sys.argv:
+        selftest()
         return
     App().mainloop()
 
