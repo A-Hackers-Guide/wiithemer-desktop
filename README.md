@@ -355,7 +355,7 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `accent_fg` | `"#0b1016"` | Text color on top of the accent. |
 | `field_bg` | `"#2a2c36"` | Background of inputs, lists and text boxes. |
 | `select_bg` | `"#34b6e8"` | Background of selected rows. |
-| `preview_size` | `360` | Largest preview image size, in pixels. |
+| `preview_size` | `300` | Largest preview image size, in pixels. |
 | `ui_scale` | `1.0` | Scales the whole interface (0.5 to 4.0), for high-resolution screens or easier reading. |
 | `window_geometry` | `"1100x720"` | Starting window size (and position), Tk style: `WIDTHxHEIGHT+X+Y`. |
 | `window_title` | `"WiiThemer Desktop"` | Window title. |
@@ -366,7 +366,7 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `gallery_columns` | `5` | Number of thumbnails per row in the Gallery. |
 | `gallery_thumb` | `150` | Gallery thumbnail size, in pixels. |
 | `gallery_autoload` | `false` | Load the Gallery previews as soon as the tab opens. |
-| `log_height` | `8` | Height of the log panel, in lines. |
+| `log_height` | `6` | Height of the log panel, in lines. |
 
 #### `build`
 

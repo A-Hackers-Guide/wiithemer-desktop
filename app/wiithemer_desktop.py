@@ -169,7 +169,7 @@ DEFAULT_SETTINGS = {
         "accent_fg": "#0b1016",
         "field_bg": "#2a2c36",
         "select_bg": "#34b6e8",
-        "preview_size": 360,
+        "preview_size": 300,
         "window_geometry": "1100x720",
         "window_title": APP_NAME,
         "language": "English",
@@ -180,7 +180,7 @@ DEFAULT_SETTINGS = {
         "gallery_autoload": False,
         "ui_scale": 1.0,
         "show_log": True,
-        "log_height": 8,
+        "log_height": 6,
     },
     "build": {
         "version": "4.3",
@@ -813,14 +813,19 @@ class App(tk.Tk):
         ttk.Button(prof, text="Delete", command=self.delete_profile).pack(side="left", padx=4)
         self.theme_title = ttk.Label(right, text="Pick a theme", style="Header.TLabel")
         self.theme_title.pack(anchor="w")
-        self.preview = ttk.Label(right)
-        self.preview.pack(anchor="w", pady=8)
-        noterow = ttk.Frame(right)
+        # Preview and notes sit side by side so the build controls fit in the default window.
+        showcase = ttk.Frame(right)
+        showcase.pack(anchor="w", fill="x", pady=8)
+        self.preview = ttk.Label(showcase)
+        self.preview.pack(side="left", anchor="n")
+        notes = ttk.Frame(showcase, padding=(12, 0, 0, 0))
+        notes.pack(side="left", fill="both", expand=True)
+        noterow = ttk.Frame(notes)
         noterow.pack(anchor="w", fill="x")
         ttk.Label(noterow, text="My notes").pack(side="left")
         ttk.Button(noterow, text="Save note", command=self.save_note).pack(side="left", padx=6)
-        self.note_box = tk.Text(right, height=3, width=60, wrap="word", **self.text_opts)
-        self.note_box.pack(anchor="w", pady=(2, 8))
+        self.note_box = tk.Text(notes, height=7, width=28, wrap="word", **self.text_opts)
+        self.note_box.pack(anchor="w", fill="both", expand=True, pady=(4, 0))
         self.note_box.bind("<FocusOut>", lambda e: self.save_note())
 
         opts = ttk.Frame(right)
@@ -850,8 +855,9 @@ class App(tk.Tk):
 
         actions = ttk.Frame(right)
         actions.pack(anchor="w", pady=12)
-        ttk.Button(actions, text="Build theme", style="Accent.TButton",
-                   command=self.start_build).pack(side="left")
+        self.build_button = ttk.Button(actions, text="Build theme", style="Accent.TButton",
+                                       command=self.start_build)
+        self.build_button.pack(side="left")
         ttk.Button(actions, text="Batch build…", command=self.batch_dialog).pack(side="left", padx=4)
         ttk.Button(actions, text="Open output folder", command=self.open_output).pack(side="left")
         ttk.Button(actions, text="Test tools", command=self.test_tools).pack(side="left", padx=4)
@@ -1867,6 +1873,11 @@ def selftest():
     SETTINGS_FILE = os.path.join(tempfile.mkdtemp(prefix="wiithemer_selftest_"), "settings.json")
     app = App()
     app.update()
+    # The Build button must be fully visible at the default window size.
+    app.nb.select(app.tab_frames["build"])
+    app.update()
+    bottom = app.build_button.winfo_rooty() + app.build_button.winfo_height()
+    assert bottom <= app.winfo_rooty() + app.winfo_height(), (bottom, app.winfo_rooty(), app.winfo_height())
     assert len(app.catalog) > 0 and os.path.exists(os.path.join(resource_dir(), "tools", "themewii.exe"))
     for i in range(len(app.nb.tabs())):
         app.nb.select(i)
