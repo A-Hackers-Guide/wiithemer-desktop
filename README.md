@@ -215,6 +215,7 @@ The app makes a `.csm` file. To install it you need a **softmodded Wii** (with t
 | **Right-click** (Control-click on a Mac) | Opens a menu with Build, Batch build, Favorite, Hide, Remove (for themes you added), **Open in MYM Editor** (downloads the theme if needed and shows what's inside it) and Copy name. |
 | **Open .mym…** | Adds a `.mym` file from your computer to the list. You can also pick a preview image (PNG/JPG/GIF/AVIF/WebP), or skip it. |
 | **Add URL…** | Adds a theme by direct link to a `.mym` file, plus an optional preview image link. The file downloads when you build. |
+| **Wii profile** | Saves and loads named setups (version, region, spin, spin-first, output folder, own System Menu file), for example "Living room Wii 4.3U" and "Kids' Wii 4.2E". Pick one from the list to load it, use **Save as…** to save the current options, and **Delete** to remove the selected one. |
 | **Preview** | Shows the theme's preview image. Built-in previews come from the original WiiThemer repository and are saved for later. |
 | **System Menu version** | `4.3`, `4.2`, `4.1` or `4.0`. |
 | **Region** | `U`, `E`, `J` or `K`. |
@@ -272,6 +273,7 @@ Lists your last builds (50 by default; change it in Settings → General): when,
 A form for the most common settings. Click **Apply** to save; the app redraws itself with the changes.
 
 - **Color preset:** one click applies a whole color scheme: **Midnight** (default), **Wii Classic**, **Light**, **Dark Wii Red**, **Dark Wii Purple**, **Lime** or **High Contrast**. You can fine-tune any color afterwards.
+- **Layout:** choose which tabs are shown and in what order, for example `build, history, mym`. Build Theme and Advanced (JSON) are always shown so you can't lock yourself out. You can also show or hide the log panel and set its height.
 - **Appearance:** widget style, font, font size, background, text, accent, text-on-accent, field and selection colors (each with a **Pick** color picker), preview width and window title.
 - **Build:** output file name template, keep work folder, and also save the System Menu `.app`.
 - **Tools:** a custom `themewii.exe`, the Wine command, use Wine on Windows, the themewii key argument, and the step timeout.
@@ -338,6 +340,9 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `preview_size` | `360` | Largest preview image size, in pixels. |
 | `window_geometry` | `"1100x720"` | Starting window size (and position), Tk style: `WIDTHxHEIGHT+X+Y`. |
 | `window_title` | `"WiiThemer Desktop"` | Window title. |
+| `tabs` | `["build", "mym", "catalog", "history", "settings", "advanced"]` | Which tabs are shown, in order. `build` and `advanced` are always added back if you leave them out. |
+| `show_log` | `true` | Show the log panel at the bottom. |
+| `log_height` | `8` | Height of the log panel, in lines. |
 
 #### `build`
 
@@ -354,6 +359,7 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `run_first_override` | `"auto"` | `auto`, `yes` or `no`: whether the spin mod is applied before the theme. |
 | `pipeline` | *(see below)* | The exact build commands. |
 | `extra_versions` | `{}` | More System Menu versions, for example `{"4.3X": "ab"}`. |
+| `profiles` | `{}` | Saved Wii profiles: `{"Name": {"version", "region", "spin", "run_first_override", "output_dir", "base_app_path"}}`. |
 
 #### `tools`
 
@@ -831,6 +837,11 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ---
 
 ## Changelog
+
+### v1.5.0
+- **Wii profiles**: save and switch between named setups for each console.
+- **Layout control**: reorder or hide tabs, and show, hide or resize the log panel.
+- Settings that are lists can be edited as comma-separated text in the Settings form.
 
 ### v1.4.0
 - **Open any theme in the MYM Editor** from the right-click menu (it downloads the theme first if needed).

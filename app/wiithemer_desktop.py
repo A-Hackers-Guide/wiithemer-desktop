@@ -27,7 +27,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.4.0"
+APP_VERSION = "1.5.0"
 MOD = "Command" if sys.platform == "darwin" else "Control"
 MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
@@ -115,6 +115,9 @@ DEFAULT_SETTINGS = {
         "preview_size": 360,
         "window_geometry": "1100x720",
         "window_title": APP_NAME,
+        "tabs": ["build", "mym", "catalog", "history", "settings", "advanced"],
+        "show_log": True,
+        "log_height": 8,
     },
     "build": {
         "version": "4.3",
@@ -128,6 +131,7 @@ DEFAULT_SETTINGS = {
         "run_first_override": "auto",
         "pipeline": copy.deepcopy(DEFAULT_PIPELINE),
         "extra_versions": {},
+        "profiles": {},
     },
     "tools": {
         "themewii_path": "",
@@ -421,16 +425,26 @@ class App(tk.Tk):
         nb = ttk.Notebook(self)
         nb.pack(fill="both", expand=True, padx=8, pady=8)
         self.nb = nb
-        nb.add(self.build_tab(nb), text="Build Theme")
-        nb.add(self.mym_tab(nb), text="MYM Editor")
-        nb.add(self.catalog_tab(nb), text="Catalog")
-        nb.add(self.history_tab(nb), text="History")
-        nb.add(self.settings_tab(nb), text="Settings")
-        nb.add(self.raw_tab(nb), text="Advanced (JSON)")
+        a = self.settings["appearance"]
+        # Every tab is built (other code relies on their widgets); the layout setting
+        # decides which are shown and in what order. Build and Advanced always show.
+        tabs = {"build": (self.build_tab, "Build Theme"), "mym": (self.mym_tab, "MYM Editor"),
+                "catalog": (self.catalog_tab, "Catalog"), "history": (self.history_tab, "History"),
+                "settings": (self.settings_tab, "Settings"), "advanced": (self.raw_tab, "Advanced (JSON)")}
+        order = [t for t in a.get("tabs", []) if t in tabs]
+        for must in ("build", "advanced"):
+            if must not in order:
+                order.insert(0 if must == "build" else len(order), must)
+        self.tab_frames = {}
+        for key, (make, label) in tabs.items():
+            self.tab_frames[key] = make(nb)
+        for key in order:
+            nb.add(self.tab_frames[key], text=tabs[key][1])
 
         logf = ttk.Frame(self)
-        logf.pack(fill="x", padx=8, pady=(0, 8))
-        self.log_box = tk.Text(logf, height=8, **self.text_opts)
+        if a.get("show_log", True):
+            logf.pack(fill="x", padx=8, pady=(0, 8))
+        self.log_box = tk.Text(logf, height=int(a.get("log_height", 8)), **self.text_opts)
         self.log_box.pack(fill="x")
         self.log(f"{APP_NAME} {APP_VERSION} on {platform.system()} - settings: {SETTINGS_FILE}")
         self.build_menu()
@@ -521,7 +535,7 @@ class App(tk.Tk):
             self.theme_menu.grab_release()
 
     def focus_search(self):
-        self.nb.select(0)
+        self.nb.select(self.tab_frames["build"])
         self.search_entry.focus_set()
 
     def zoom(self, step):
@@ -638,6 +652,16 @@ class App(tk.Tk):
 
         right = ttk.Frame(f, padding=(16, 0))
         right.pack(side="left", fill="both", expand=True)
+        prof = ttk.Frame(right)
+        prof.pack(anchor="w", fill="x", pady=(0, 6))
+        ttk.Label(prof, text="Wii profile").pack(side="left")
+        self.v_profile = tk.StringVar(value="")
+        self.profile_box = ttk.Combobox(prof, textvariable=self.v_profile, width=22, state="readonly",
+                                        values=sorted(b["profiles"]))
+        self.profile_box.pack(side="left", padx=6)
+        self.profile_box.bind("<<ComboboxSelected>>", lambda e: self.load_profile(self.v_profile.get()))
+        ttk.Button(prof, text="Save as…", command=self.save_profile_dialog).pack(side="left")
+        ttk.Button(prof, text="Delete", command=self.delete_profile).pack(side="left", padx=4)
         self.theme_title = ttk.Label(right, text="Pick a theme", style="Header.TLabel")
         self.theme_title.pack(anchor="w")
         self.preview = ttk.Label(right)
@@ -742,6 +766,8 @@ class App(tk.Tk):
 
         def field(group, key, label, row, kind="entry", values=None):
             src = self.settings[group][key]
+            if isinstance(src, list):
+                src = ", ".join(src)
             var = tk.BooleanVar(value=src) if kind == "check" else tk.StringVar(value=str(src))
             self.setting_vars[(group, key)] = var
             ttk.Label(f, text=label).grid(row=row, column=0, sticky="w")
@@ -770,6 +796,12 @@ class App(tk.Tk):
             field("appearance", key, label, r, "color"); r += 1
         field("appearance", "preview_size", "Preview width (px)", r); r += 1
         field("appearance", "window_title", "Window title", r); r += 1
+        section("Layout", r); r += 1
+        field("appearance", "tabs", "Tabs (order, comma-separated)", r); r += 1
+        ttk.Label(f, text="  names: build, mym, catalog, history, settings, advanced - leave one out to hide it"
+                  ).grid(row=r, column=0, columnspan=3, sticky="w"); r += 1
+        field("appearance", "show_log", "Show log panel", r, "check"); r += 1
+        field("appearance", "log_height", "Log height (lines)", r); r += 1
         section("Build", r); r += 1
         field("build", "filename_template", "Output file name", r); r += 1
         ttk.Label(f, text="  variables: {theme_name} {theme_label} {display} {version} {region} {appid} {spin} {spin_suffix}"
@@ -834,7 +866,8 @@ class App(tk.Tk):
                     self.show_preview(payload)
                 elif kind == "inspect":
                     self.mym_open(payload)
-                    self.nb.select(1)
+                    if str(self.tab_frames["mym"]) in self.nb.tabs():
+                        self.nb.select(self.tab_frames["mym"])
                 elif kind == "progress":
                     self.progress.configure(value=payload)
                 elif kind == "history":
@@ -1012,6 +1045,55 @@ class App(tk.Tk):
         self.persist()
         return b
 
+    PROFILE_KEYS = ("version", "region", "spin", "run_first_override", "output_dir", "base_app_path")
+
+    def save_profile(self, name):
+        b = self.save_build_options()
+        b["profiles"][name] = {k: b[k] for k in self.PROFILE_KEYS}
+        self.persist()
+        self.profile_box.configure(values=sorted(b["profiles"]))
+        self.v_profile.set(name)
+        self.log(f"Saved Wii profile '{name}'")
+
+    def save_profile_dialog(self):
+        win = tk.Toplevel(self)
+        win.title("Save Wii profile")
+        win.configure(bg=self.settings["appearance"]["bg"])
+        name = tk.StringVar(value=self.v_profile.get() or f"My Wii {self.v_version.get()}{self.v_region.get()}")
+        ttk.Label(win, text="Profile name (for example \"Living room Wii\")").pack(padx=10, pady=(10, 4))
+        e = ttk.Entry(win, textvariable=name, width=36)
+        e.pack(padx=10)
+        e.focus_set()
+
+        def ok():
+            if name.get().strip():
+                self.save_profile(name.get().strip())
+                win.destroy()
+        e.bind("<Return>", lambda ev: ok())
+        ttk.Button(win, text="Save", style="Accent.TButton", command=ok).pack(pady=10)
+
+    def load_profile(self, name):
+        prof = self.settings["build"]["profiles"].get(name)
+        if not prof:
+            return
+        for key, var in [("version", self.v_version), ("region", self.v_region), ("spin", self.v_spin),
+                         ("run_first_override", self.v_runfirst), ("output_dir", self.v_outdir),
+                         ("base_app_path", self.v_base)]:
+            if key in prof:
+                var.set(prof[key])
+        self.save_build_options()
+        self.log(f"Loaded Wii profile '{name}': {prof.get('version')}{prof.get('region')}, {prof.get('spin')}")
+
+    def delete_profile(self):
+        name = self.v_profile.get()
+        profiles = self.settings["build"]["profiles"]
+        if name in profiles:
+            del profiles[name]
+            self.persist()
+            self.profile_box.configure(values=sorted(profiles))
+            self.v_profile.set("")
+            self.log(f"Deleted Wii profile '{name}'")
+
     def start_build(self):
         themes = self.selected_themes()
         if not themes:
@@ -1178,7 +1260,9 @@ class App(tk.Tk):
         for (group, key), var in self.setting_vars.items():
             old = DEFAULT_SETTINGS[group][key]
             val = var.get()
-            if isinstance(old, (int, float)) and not isinstance(old, bool):
+            if isinstance(old, list):
+                val = [x.strip() for x in str(val).split(",") if x.strip()]
+            elif isinstance(old, (int, float)) and not isinstance(old, bool):
                 try:
                     val = type(old)(val)
                 except ValueError:
@@ -1424,6 +1508,18 @@ def selftest():
     app.zoom(1)
     app.zoom(-1)
     app.use_preset("Wii Classic")
+    app.save_profile("Test Wii")
+    app.v_version.set("4.0")
+    app.load_profile("Test Wii")
+    assert app.v_version.get() == "4.3"
+    app.v_profile.set("Test Wii")
+    app.delete_profile()
+    assert not app.settings["build"]["profiles"]
+    app.settings["appearance"].update(tabs=["mym", "history"], show_log=False, log_height=3)
+    app.rebuild()
+    assert len(app.nb.tabs()) == 4  # build and advanced are always kept
+    app.settings["appearance"]["tabs"] = list(DEFAULT_SETTINGS["appearance"]["tabs"])
+    app.rebuild()
     app.focus_search()
     app.mym_new()
     app.add_history({"theme": "t", "display": "4.3U", "spin": "nospin", "path": "x.csm"})
