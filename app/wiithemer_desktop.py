@@ -9,6 +9,7 @@ itself, the catalog, the tools, and the look of the app.
 """
 
 import copy
+import hashlib
 import io
 import json
 import os
@@ -26,7 +27,7 @@ import tkinter as tk
 from tkinter import colorchooser, filedialog, font as tkfont, messagebox, ttk
 
 APP_NAME = "WiiThemer Desktop"
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.4.0"
 MOD = "Command" if sys.platform == "darwin" else "Control"
 MOD_LABEL = "Cmd" if sys.platform == "darwin" else "Ctrl"
 REPO = "A-Hackers-Guide/wiithemer-desktop"
@@ -134,6 +135,7 @@ DEFAULT_SETTINGS = {
         "key": "wiithemer_______Scooby74029",
         "use_wine_on_windows": False,
         "timeout_seconds": 600,
+        "min_output_mb": 5.0,
     },
     "catalog": {
         "base_url": "https://raw.githubusercontent.com/scooby7402976/wiithemer/1.0/",
@@ -200,6 +202,14 @@ def open_path(path):
         os.startfile(path)  # noqa
     else:
         subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", path])
+
+
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
 def latest_release():
@@ -294,7 +304,8 @@ class Builder:
         mode = b["run_first_override"]
         run_first = theme_name.lower() in RUN_FIRST if mode == "auto" else mode == "yes"
         steps = b["pipeline"]["run_first" if run_first else "normal"]
-        prefix = self.command_prefix(exe)
+        uses_themewii = any(st.split()[:1] == ["{themewii}"] for st in steps)
+        prefix = self.command_prefix(exe) if uses_themewii else []
         values = dict(theme=theme_name, spin=spin_name, appid=appid, output=output,
                       key=tools["key"], display=display, version=version, region=region)
 
@@ -320,9 +331,15 @@ class Builder:
         result = os.path.join(work, output)
         if not os.path.exists(result) or os.path.getsize(result) == 0:
             raise RuntimeError(f"Build finished but {output} was not created.")
+        size_mb = os.path.getsize(result) / (1024 * 1024)
+        self.log(f"Output size: {size_mb:.2f} MB")
+        if size_mb < float(tools.get("min_output_mb", 0)):
+            self.log(f"WARNING: {output} is only {size_mb:.2f} MB. A complete theme is usually over "
+                     f"{tools['min_output_mb']} MB - it may be broken. Do NOT install it without checking.")
         os.makedirs(b["output_dir"], exist_ok=True)
         final = os.path.join(b["output_dir"], output)
         shutil.copy2(result, final)
+        self.log(f"SHA-256: {sha256(final)}")
         if b["save_base_app"]:
             base = os.path.join(work, "000000" + appid)
             if os.path.exists(base):
@@ -477,6 +494,7 @@ class App(tk.Tk):
         self.theme_menu.add_command(label="Favorite / unfavorite", command=self.toggle_favorite)
         self.theme_menu.add_command(label="Hide", command=self.hide_selected)
         self.theme_menu.add_command(label="Remove (custom themes)", command=self.remove_selected_custom)
+        self.theme_menu.add_command(label="Open in MYM Editor", command=self.inspect_theme)
         self.theme_menu.add_command(label="Copy name", command=self.copy_theme_name)
 
     def bind_shortcuts(self):
@@ -530,6 +548,23 @@ class App(tk.Tk):
         if len(customs) == before:
             self.log("Only themes you added can be removed; built-in themes can be hidden.")
         self.rebuild()
+
+    def inspect_theme(self):
+        """Download (if needed) the selected theme and open it in the MYM Editor."""
+        t = self.selected_theme()
+        if not t:
+            return
+        region = self.v_region.get()
+        if t.get("regions") and region not in t["regions"]:
+            region = t["regions"][0]
+
+        def work():
+            try:
+                path = self.resolve_theme_file(t, region)
+                self.msgs.put(("inspect", path))
+            except Exception as e:
+                self.msgs.put(("error", f"Could not open {t['name']}: {e}"))
+        threading.Thread(target=work, daemon=True).start()
 
     def copy_theme_name(self):
         self.clipboard_clear()
@@ -747,6 +782,7 @@ class App(tk.Tk):
         field("tools", "use_wine_on_windows", "Use Wine on Windows", r, "check"); r += 1
         field("tools", "key", "themewii key argument", r); r += 1
         field("tools", "timeout_seconds", "Step timeout (s)", r); r += 1
+        field("tools", "min_output_mb", "Warn if output under (MB)", r); r += 1
         section("General", r); r += 1
         field("general", "check_for_updates", "Check for updates at start", r, "check"); r += 1
         field("general", "history_limit", "History entries to keep", r); r += 1
@@ -796,6 +832,9 @@ class App(tk.Tk):
                     self.log_box.see("end")
                 elif kind == "preview":
                     self.show_preview(payload)
+                elif kind == "inspect":
+                    self.mym_open(payload)
+                    self.nb.select(1)
                 elif kind == "progress":
                     self.progress.configure(value=payload)
                 elif kind == "history":
@@ -1038,7 +1077,8 @@ class App(tk.Tk):
                     self.log(f"Done: {out}")
                     built.append(out)
                     self.msgs.put(("history", {"theme": t["name"], "display": version + region,
-                                               "spin": spin, "path": out}))
+                                               "spin": spin, "path": out, "sha256": sha256(out),
+                                               "size": os.path.getsize(out)}))
                 except Exception as e:
                     self.log(traceback.format_exc())
                     failed.append(f"{t['name']} {version}{region}: {e}")
@@ -1069,7 +1109,8 @@ class App(tk.Tk):
         row = ttk.Frame(f)
         row.pack(fill="x")
         ttk.Button(row, text="Show file", command=self.history_show).pack(side="left")
-        ttk.Button(row, text="Clear history", command=self.history_clear).pack(side="left", padx=4)
+        ttk.Button(row, text="Copy SHA-256", command=self.history_copy_hash).pack(side="left", padx=4)
+        ttk.Button(row, text="Clear history", command=self.history_clear).pack(side="left")
         return f
 
     def refresh_history(self):
@@ -1091,6 +1132,13 @@ class App(tk.Tk):
             folder = os.path.dirname(path)
             if os.path.isdir(folder):
                 open_path(folder)
+
+    def history_copy_hash(self):
+        hist = list(reversed(self.settings["general"]["history"]))
+        hashes = [hist[int(i)].get("sha256", "") for i in self.hist_tree.selection()]
+        self.clipboard_clear()
+        self.clipboard_append("\n".join(h for h in hashes if h))
+        self.log("Copied SHA-256" if any(hashes) else "No checksum recorded for that build")
 
     def history_clear(self):
         self.settings["general"]["history"] = []
@@ -1130,9 +1178,9 @@ class App(tk.Tk):
         for (group, key), var in self.setting_vars.items():
             old = DEFAULT_SETTINGS[group][key]
             val = var.get()
-            if isinstance(old, int) and not isinstance(old, bool):
+            if isinstance(old, (int, float)) and not isinstance(old, bool):
                 try:
-                    val = int(val)
+                    val = type(old)(val)
                 except ValueError:
                     messagebox.showerror(APP_NAME, f"{key} must be a number")
                     return
@@ -1172,8 +1220,8 @@ class App(tk.Tk):
         self.rebuild()
 
     # ---------- MYM editor ----------
-    def mym_open(self):
-        p = filedialog.askopenfilename(filetypes=[("Theme mod", "*.mym"), ("All files", "*")])
+    def mym_open(self, p=None):
+        p = p or filedialog.askopenfilename(filetypes=[("Theme mod", "*.mym"), ("All files", "*")])
         if not p:
             return
         try:
@@ -1357,6 +1405,15 @@ def selftest():
     with zipfile.ZipFile(os.path.join(folder, "demo.mym"), "w") as z:
         z.writestr("mym.ini", "[sdta]\n")
     assert app.import_themes_from(folder) == 1 and app.theme_tree.exists("demo")
+    app.mym_open(os.path.join(folder, "demo.mym"))
+    assert "mym.ini" in app.mym["entries"]
+    if not getattr(sys, "frozen", False):
+        # Run the real Builder with a stand-in pipeline step (no themewii/Wine needed).
+        s2 = copy.deepcopy(DEFAULT_SETTINGS)
+        s2["build"].update(output_dir=tempfile.mkdtemp(prefix="wiithemer_out_"), pipeline={
+            "normal": [f"{sys.executable} -c open('{{output}}','wb').write(b'x'*10)"], "run_first": []})
+        out = Builder(s2, print).build(os.path.join(folder, "demo.mym"), "demo", "4.3", "U", "nospin")
+        assert os.path.basename(out) == "demo4.3U_nospin.csm" and len(sha256(out)) == 64
     app.theme_tree.selection_set("demo")
     app.hide_selected()
     assert not app.theme_tree.exists("demo")

@@ -103,6 +103,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v8
         with: { path: out, merge-multiple: true }
+      - run: cd out && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
       - uses: softprops/action-gh-release@v3
         with:
           files: out/*

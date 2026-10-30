@@ -19,6 +19,12 @@ input,select,button{font:inherit;padding:8px 10px;border-radius:8px;border:1px s
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
 .card{background:var(--card);border-radius:12px;overflow:hidden}.card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:#0003}
 .card div{padding:8px 12px;font-weight:600}.card small{display:block;color:var(--muted);font-weight:400}
+.card{cursor:pointer;border:2px solid transparent}.card:hover,.card:focus{border-color:var(--accent);outline:none}
+dialog{background:var(--card);color:var(--fg);border:none;border-radius:14px;max-width:560px;width:calc(100% - 32px);padding:20px}
+dialog::backdrop{background:#0008}dialog img{width:100%;border-radius:10px}
+dialog .row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+pre{background:var(--bg);padding:12px;border-radius:8px;white-space:pre-wrap;word-break:break-all;font-size:14px}
+#count{color:var(--muted);align-self:center}
 footer{color:var(--muted);margin-top:40px;font-size:14px}a{color:var(--accent)}
 </style>
 </head>
@@ -44,9 +50,26 @@ footer{color:var(--muted);margin-top:40px;font-size:14px}a{color:var(--accent)}
 <h2>Theme gallery</h2>
 <div class="controls">
   <input id="q" placeholder="Search themes" aria-label="Search themes">
+  <select id="region" aria-label="Region">
+    <option value="">All regions</option><option>U</option><option>E</option><option>J</option><option>K</option>
+  </select>
   <button id="mode">Toggle light/dark</button>
+  <span id="count"></span>
 </div>
 <div class="grid" id="grid"></div>
+<dialog id="dlg">
+  <h2 id="d-name"></h2>
+  <img id="d-img" alt="">
+  <p id="d-regions"></p>
+  <div class="row">
+    <select id="d-ver" aria-label="System Menu version"><option>4.3</option><option>4.2</option><option>4.1</option><option>4.0</option></select>
+    <select id="d-reg" aria-label="Region"></select>
+    <select id="d-spin" aria-label="Spin"><option>nospin</option><option>spin</option><option>fastspin</option><option>transchan</option></select>
+  </div>
+  <p>Open the app, pick this theme and these options, then click <b>Build theme</b>. Or run this from a terminal (on macOS and Linux):</p>
+  <pre id="d-cmd"></pre>
+  <div class="row"><button id="d-copy">Copy command</button><button id="d-close">Close</button></div>
+</dialog>
 <footer>
   A GPL-2.0 port of <a href="https://github.com/scooby7402976/wiithemer">WiiThemer</a> by scooby7402976.
   Themes and previews are loaded from the original project and belong to their creators.
@@ -57,17 +80,43 @@ footer{color:var(--muted);margin-top:40px;font-size:14px}a{color:var(--accent)}
 const BASE = "https://raw.githubusercontent.com/scooby7402976/wiithemer/1.0/previewpics/";
 let themes = [];
 const grid = document.getElementById("grid"), q = document.getElementById("q");
+const reg = document.getElementById("region"), dlg = document.getElementById("dlg");
+let current = null;
 function render() {
-  const s = q.value.toLowerCase();
+  const s = q.value.toLowerCase(), r = reg.value;
   grid.innerHTML = "";
-  for (const t of themes.filter(t => t.name.toLowerCase().includes(s))) {
-    const c = document.createElement("div"); c.className = "card";
+  const shown = themes.filter(t => t.name.toLowerCase().includes(s) && (!r || t.regions.includes(r)));
+  document.getElementById("count").textContent = shown.length + " themes";
+  for (const t of shown) {
+    const c = document.createElement("div"); c.className = "card"; c.tabIndex = 0;
+    c.onclick = () => openTheme(t); c.onkeydown = e => { if (e.key === "Enter") openTheme(t); };
     const img = document.createElement("img"); img.loading = "lazy"; img.alt = t.name + " preview"; img.src = BASE + t.preview;
     const d = document.createElement("div"); d.textContent = t.name;
     const r = document.createElement("small"); r.textContent = "Regions: " + t.regions.join(", ");
     d.append(r); c.append(img, d); grid.append(c);
   }
 }
+function cmd() {
+  const v = document.getElementById("d-ver").value, r = document.getElementById("d-reg").value,
+        sp = document.getElementById("d-spin").value;
+  if (v === "4.0" && r === "K") return "There's no Korean System Menu 4.0. Pick another version.";
+  return `WiiThemerDesktop --cli --theme "${current.name}" --version ${v} --region ${r} --spin ${sp}`;
+}
+function update() { document.getElementById("d-cmd").textContent = cmd(); }
+function openTheme(t) {
+  current = t;
+  document.getElementById("d-name").textContent = t.name;
+  document.getElementById("d-img").src = BASE + t.preview;
+  document.getElementById("d-img").alt = t.name + " preview";
+  document.getElementById("d-regions").textContent = "Available for regions: " + t.regions.join(", ");
+  const sel = document.getElementById("d-reg"); sel.innerHTML = "";
+  for (const r of t.regions) { const o = document.createElement("option"); o.textContent = r; sel.append(o); }
+  update(); dlg.showModal();
+}
+["d-ver", "d-reg", "d-spin"].forEach(id => document.getElementById(id).onchange = update);
+document.getElementById("d-close").onclick = () => dlg.close();
+document.getElementById("d-copy").onclick = () => navigator.clipboard && navigator.clipboard.writeText(cmd());
+reg.addEventListener("change", render);
 fetch("catalog.json").then(r => r.json()).then(j => { themes = j; render(); });
 q.addEventListener("input", render);
 try { const m = localStorage.getItem("mode"); if (m) document.documentElement.dataset.theme = m; } catch (e) {}

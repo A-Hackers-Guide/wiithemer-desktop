@@ -212,7 +212,7 @@ The app makes a `.csm` file. To install it you need a **softmodded Wii** (with t
 | **Theme list** | Every theme that isn't hidden. **★** marks favorites. The **Source** column says where it comes from: `catalog` (built in), `local` (a file on your computer) or `url` (a link). **Ctrl-click / Cmd-click / Shift-click** selects several themes; **Build theme** then builds all of them. |
 | **★ button** | Stars or unstars the selected themes. |
 | **Double-click / Enter** | Builds the selected theme(s) right away. |
-| **Right-click** (Control-click on a Mac) | Opens a menu with Build, Batch build, Favorite, Hide, Remove (for themes you added) and Copy name. |
+| **Right-click** (Control-click on a Mac) | Opens a menu with Build, Batch build, Favorite, Hide, Remove (for themes you added), **Open in MYM Editor** (downloads the theme if needed and shows what's inside it) and Copy name. |
 | **Open .mym…** | Adds a `.mym` file from your computer to the list. You can also pick a preview image (PNG/JPG/GIF/AVIF/WebP), or skip it. |
 | **Add URL…** | Adds a theme by direct link to a `.mym` file, plus an optional preview image link. The file downloads when you build. |
 | **Preview** | Shows the theme's preview image. Built-in previews come from the original WiiThemer repository and are saved for later. |
@@ -265,7 +265,7 @@ Click an item to view it. Text files open as editable text, and PNG/JPG/GIF file
 
 ### History
 
-Lists your last builds (50 by default; change it in Settings → General): when, version, spin, and the file path. **Show file** opens the folder containing the selected build, and **Clear history** empties the list (the files themselves aren't deleted).
+Lists your last builds (50 by default; change it in Settings → General): when, version, spin, and the file path. **Show file** opens the folder containing the selected build. **Copy SHA-256** copies the checksum of the selected build(s), so you can check a file you copied to an SD card or shared with someone. **Clear history** empties the list (the files themselves aren't deleted).
 
 ### Settings
 
@@ -364,6 +364,7 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | `use_wine_on_windows` | `false` | Run themewii through Wine even on Windows. Rarely needed. |
 | `key` | `"wiithemer_______Scooby74029"` | The key argument WiiThemer passes to themewii on every call. |
 | `timeout_seconds` | `600` | Maximum time for each build step before it's stopped. |
+| `min_output_mb` | `5.0` | If a built `.csm` is smaller than this, the log shows a loud **WARNING** that it may be broken. Set it to `0` to turn the warning off. |
 
 #### `catalog`
 
@@ -381,7 +382,7 @@ Settings are stored in `settings.json` (see [Where files are stored](#where-file
 | Key | Default | Description |
 |---|---|---|
 | `check_for_updates` | `true` | Ask GitHub for a newer release when the app starts. |
-| `history` | `[]` | Past builds: `{"when", "theme", "display", "spin", "path"}`. |
+| `history` | `[]` | Past builds: `{"when", "theme", "display", "spin", "path", "sha256", "size"}`. |
 | `history_limit` | `50` | How many history entries to keep. |
 
 ### Output file name template
@@ -440,7 +441,7 @@ The defaults match wiithemer.org's `index.php` exactly:
 
 Rules:
 - A step that starts with `{themewii}` runs themewii (through Wine where needed).
-- Any other step runs **as written**, so you can call other tools, for example `ASH.exe` (also bundled), your own scripts, or `7z`.
+- Any other step runs **as written** (and doesn't need Wine), so you can call other tools, for example `ASH.exe` (also bundled), your own scripts, or `7z`.
 - The download step (`{themewii} {appid} {key}`) is skipped automatically when `000000{appid}` already exists, for example when you set **Own System Menu .app**.
 - If any step exits with an error, the build stops and the log shows the output.
 - After the last step, `{output}` must exist. It's then copied to your output folder.
@@ -715,7 +716,13 @@ All building happens on GitHub Actions (`.github/workflows/release.yml`), not on
    - Linux x86_64 and ARM64
 
    `--selftest` opens every tab, selects and previews a theme, toggles favorites, applies all color presets, uses the MYM editor and history, and resets settings, all against a temporary settings file.
-2. Pushing a tag like `v1.2.0` does the same, then publishes a GitHub Release with the `.exe`, `.dmg`, `.app.zip` and `.AppImage` attached.
+2. Pushing a tag like `v1.2.0` does the same, then publishes a GitHub Release with every `.exe`, `.dmg`, `.app.zip` and `.AppImage` attached, plus `SHA256SUMS.txt`.
+
+   Check a download on macOS/Linux with:
+
+   ```bash
+   shasum -a 256 -c SHA256SUMS.txt --ignore-missing
+   ```
 3. The website is served by GitHub Pages from the `docs/` folder on `main`.
 
 To make a release:
@@ -799,7 +806,8 @@ Installing System Menu themes changes your Wii's most important software. A bad 
 1. **Make a NAND backup** with BootMii, and keep it somewhere safe.
 2. **Install Priiloader**, so you can recover if the menu won't load.
 3. **Check that the version and region match** your Wii exactly (Wii Settings, top-right corner).
-4. Check that the `.csm` file size looks normal: several MB, roughly the size of the original System Menu file.
+4. Check that the `.csm` file size looks normal: several MB, roughly the size of the original System Menu file. The app prints the size and warns you below 5 MB ([`min_output_mb`](#tools)).
+5. Compare the SHA-256 in the log (or **History → Copy SHA-256**) with the file on your SD card, to make sure it copied correctly.
 
 You use this software at your own risk. The authors aren't responsible for any damage.
 
@@ -823,6 +831,15 @@ This project is licensed under the **GNU General Public License v2.0**, the same
 ---
 
 ## Changelog
+
+### v1.4.0
+- **Open any theme in the MYM Editor** from the right-click menu (it downloads the theme first if needed).
+- A **size safety check**: a loud warning when a built `.csm` is suspiciously small (`min_output_mb`).
+- A **SHA-256 checksum** for every build, shown in the log and saved in the History (with **Copy SHA-256**).
+- Each release now includes **`SHA256SUMS.txt`** for all downloads.
+- Fix: Wine is only required when a build step actually runs themewii.
+- The self-test now runs a full build through the real Builder.
+- Website: a region filter, a theme count, and a detail popup for each theme with a ready-to-copy CLI command.
 
 ### v1.3.0
 - A **menu bar** (File / View / Help) and **keyboard shortcuts**.
