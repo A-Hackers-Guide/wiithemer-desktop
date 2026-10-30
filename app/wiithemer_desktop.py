@@ -169,7 +169,7 @@ DEFAULT_SETTINGS = {
         "accent_fg": "#0b1016",
         "field_bg": "#2a2c36",
         "select_bg": "#34b6e8",
-        "preview_size": 260,
+        "preview_size": 240,
         "window_geometry": "1100x720",
         "window_title": APP_NAME,
         "language": "English",
@@ -180,7 +180,7 @@ DEFAULT_SETTINGS = {
         "gallery_autoload": False,
         "ui_scale": 1.0,
         "show_log": True,
-        "log_height": 6,
+        "log_height": 5,
     },
     "build": {
         "version": "4.3",
