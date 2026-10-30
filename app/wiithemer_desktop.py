@@ -1970,7 +1970,57 @@ def selftest():
     app.destroy()
 
 
+def screenshots(out_dir):
+    """Capture each tab to PNGs (used by the screenshots workflow under Xvfb)."""
+    import time
+    from PIL import ImageGrab
+    global SETTINGS_FILE
+    SETTINGS_FILE = os.path.join(tempfile.mkdtemp(prefix="wiithemer_shots_"), "settings.json")
+    os.makedirs(out_dir, exist_ok=True)
+    app = App()
+    app.geometry("1200x800+0+0")
+
+    def settle(seconds):
+        end = time.time() + seconds
+        while time.time() < end:
+            app.update()
+            time.sleep(0.05)
+
+    def grab(name):
+        settle(0.5)
+        x, y = app.winfo_rootx(), app.winfo_rooty()
+        ImageGrab.grab(bbox=(x, y, x + app.winfo_width(), y + app.winfo_height())).save(
+            os.path.join(out_dir, name + ".png"))
+        print("saved", name)
+
+    settle(1)
+    first = app.theme_tree.get_children()[5]
+    app.theme_tree.selection_set(first)
+    app.on_theme_select()
+    app.log("Building Black Pirate for 4.3U (nospin)...")
+    settle(6)  # let the preview download
+    grab("build")
+    app.nb.select(app.tab_frames["gallery"])
+    app.gallery_load()
+    settle(25)
+    grab("gallery")
+    for key in ("mym", "catalog", "history", "settings", "advanced"):
+        app.nb.select(app.tab_frames[key])
+        grab(key)
+    for preset in ("Wii Classic", "Dark Wii Red"):
+        app.use_preset(preset)
+        settle(1)
+        app.theme_tree.selection_set(app.theme_tree.get_children()[5])
+        app.on_theme_select()
+        settle(5)
+        grab("preset-" + preset.lower().replace(" ", "-"))
+    app.destroy()
+
+
 def main():
+    if "--screenshots" in sys.argv:
+        screenshots(sys.argv[sys.argv.index("--screenshots") + 1])
+        return
     if "--cli" in sys.argv:
         sys.exit(cli([x for x in sys.argv[1:] if x != "--cli"]))
     if "--selftest" in sys.argv:

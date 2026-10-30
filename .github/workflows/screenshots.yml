@@ -1,0 +1,19 @@
+name: Screenshots
+
+# Run by hand (Actions tab -> Screenshots -> Run workflow) to refresh the
+# images used by the README and website. Download them from the run's artifacts.
+on:
+  workflow_dispatch:
+
+jobs:
+  shots:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with: { python-version: "3.12" }
+      - run: sudo apt-get update && sudo apt-get install -y xvfb fonts-dejavu
+      - run: pip install -r requirements.txt
+      - run: xvfb-run -a -s "-screen 0 1280x900x24" python app/wiithemer_desktop.py --screenshots shots
+      - uses: actions/upload-artifact@v7
+        with: { name: screenshots, path: shots }
