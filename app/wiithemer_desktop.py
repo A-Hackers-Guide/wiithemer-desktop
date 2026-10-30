@@ -792,11 +792,13 @@ class App(tk.Tk):
         self.theme_tree.column("#0", width=220)
         self.theme_tree.column("fav", width=30, anchor="center")
         self.theme_tree.column("src", width=70)
-        self.theme_tree.pack(fill="y", expand=True)
+        self.theme_tree.pack(fill="both", expand=True)
         self.theme_tree.bind("<<TreeviewSelect>>", lambda e: self.on_theme_select())
         row = ttk.Frame(left)
-        row.pack(fill="x", pady=4)
-        ttk.Button(row, text="Open .mym…", command=self.add_local_theme).pack(side="left")
+        # Anchored to the bottom (packed before the list) so the list shrinks instead of hiding these.
+        row.pack(side="bottom", fill="x", pady=4, before=self.theme_tree)
+        self.open_mym_button = ttk.Button(row, text="Open .mym…", command=self.add_local_theme)
+        self.open_mym_button.pack(side="left")
         ttk.Button(row, text="Add URL…", command=self.add_url_theme).pack(side="left", padx=4)
         ttk.Button(row, text="★", width=3, command=self.toggle_favorite).pack(side="left")
 
@@ -1883,6 +1885,7 @@ def selftest():
     tab_bottom = app.nb.winfo_rooty() + app.nb.winfo_height()
     window_bottom = app.winfo_rooty() + app.winfo_height()
     for widget, limit in ((app.build_button, tab_bottom), (app.base_entry, tab_bottom),
+                          (app.open_mym_button, tab_bottom),
                           (app.log_box, window_bottom)):
         bottom = widget.winfo_rooty() + widget.winfo_height()
         assert widget.winfo_ismapped() and bottom <= limit, (str(widget), bottom, limit)
