@@ -1,3 +1,5 @@
+[![Download WiiThemer](https://img.shields.io/sourceforge/dt/wiithemer.svg?label=SourceForge%20downloads)](https://sourceforge.net/projects/wiithemer/files/latest/download) [![Download WiiThemer](https://a.fsdn.com/con/app/sf-download-button)](https://sourceforge.net/projects/wiithemer/files/latest/download)
+
 <p align="center">
   <img src="packaging/icon.png" width="128" alt="WiiThemer Desktop icon">
 </p>
